@@ -1,47 +1,5 @@
-import { useParams, useNavigate } from "react-router-dom";
-
-const mockDetails: Record<string, {
-  id: string;
-  service: string;
-  title: string;
-  snippet: string | null;
-  updated_at: string;
-  author: string | null;
-  url: string;
-  kind: string;
-  meta: Record<string, string | null>;
-}> = {
-  "slack-001": {
-    id: "slack-001", service: "slack", title: "#general",
-    snippet: "月次報告に関する議論がありました。来週の会議で詳細を共有します。",
-    updated_at: "2026-01-15T10:30:00Z", author: "田中太郎", url: "https://slack.com/archives/C01EXAMPLE/p1700000001",
-    kind: "message", meta: { channel_name: "general" },
-  },
-  "slack-002": {
-    id: "slack-002", service: "slack", title: "#project-alpha",
-    snippet: "月次報告の資料を共有します。ドライブにアップロードしました。",
-    updated_at: "2026-01-10T14:00:00Z", author: "佐藤花子", url: "https://slack.com/archives/C02EXAMPLE/p1700000002",
-    kind: "message", meta: { channel_name: "project-alpha" },
-  },
-  "gmail-001": {
-    id: "gmail-001", service: "gmail", title: "Re: 月次報告について",
-    snippet: "添付の資料をご確認ください。修正版を送付いたします。",
-    updated_at: "2026-01-12T09:00:00Z", author: "suzuki@example.com", url: "https://mail.google.com/mail/u/0/#inbox/example001",
-    kind: "email", meta: { from: "suzuki@example.com", to: "team@example.com", subject: "Re: 月次報告について" },
-  },
-  "dbx-001": {
-    id: "dbx-001", service: "dropbox", title: "月次報告_報告書.pdf",
-    snippet: null,
-    updated_at: "2026-01-08T16:00:00Z", author: null, url: "https://www.dropbox.com/s/example/report.pdf",
-    kind: "file", meta: { path: "/共有フォルダ/報告書/", mime_type: "application/pdf", file_size: "1 MB" },
-  },
-  "drive-001": {
-    id: "drive-001", service: "drive", title: "月次報告 まとめ",
-    snippet: "第3四半期の結果をまとめました。各部門の進捗状況を確認してください。",
-    updated_at: "2026-01-20T11:00:00Z", author: "yamada@example.com", url: "https://docs.google.com/document/d/example001/edit",
-    kind: "file", meta: { path: "/マイドライブ/プロジェクト/", mime_type: "Google ドキュメント", file_size: null },
-  },
-};
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import type { ResultItem } from "../types/index";
 
 const serviceColors: Record<string, string> = {
   slack: "#4A154B",
@@ -50,15 +8,28 @@ const serviceColors: Record<string, string> = {
   drive: "#0F9D58",
 };
 
+const metaLabels: Record<string, string> = {
+  channel_name: "チャンネル",
+  from: "送信元",
+  to: "宛先",
+  subject: "件名",
+  path: "パス",
+  mime_type: "形式",
+};
+
 export default function DetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const detail = id ? mockDetails[id] : undefined;
+  const location = useLocation();
+  const item = (location.state as { item?: ResultItem } | null)?.item;
 
-  if (!detail) {
+  if (!item || item.id !== id) {
     return (
       <div style={{ padding: 48, textAlign: "center" }}>
         <h2 style={{ marginBottom: 16 }}>アイテムが見つかりません</h2>
+        <p style={{ color: "var(--text-secondary)", marginBottom: 16, fontSize: 14 }}>
+          検索結果から再度アクセスしてください
+        </p>
         <button
           onClick={() => navigate(-1)}
           style={{
@@ -75,6 +46,15 @@ export default function DetailPage() {
     );
   }
 
+  const metaEntries: [string, string][] = [];
+  if (item.channel_name) metaEntries.push(["channel_name", `#${item.channel_name}`]);
+  if (item.from) metaEntries.push(["from", item.from]);
+  if (item.to) metaEntries.push(["to", item.to]);
+  if (item.subject) metaEntries.push(["subject", item.subject]);
+  if (item.path) metaEntries.push(["path", item.path]);
+  if (item.mime_type) metaEntries.push(["mime_type", item.mime_type]);
+  if (item.file_size != null) metaEntries.push(["file_size", `${(item.file_size / 1024).toFixed(0)} KB`]);
+
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: 32 }}>
       <button
@@ -90,7 +70,7 @@ export default function DetailPage() {
           gap: 4,
         }}
       >
-        ← 結果一覧に戻る
+        &larr; 結果一覧に戻る
       </button>
 
       <div
@@ -106,21 +86,21 @@ export default function DetailPage() {
             style={{
               padding: "4px 12px",
               borderRadius: 12,
-              background: `${serviceColors[detail.service]}15`,
-              color: serviceColors[detail.service],
+              background: `${serviceColors[item.service]}15`,
+              color: serviceColors[item.service],
               fontSize: 12,
               fontWeight: 600,
               textTransform: "uppercase",
             }}
           >
-            {detail.service}
+            {item.service}
           </span>
-          <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{detail.kind}</span>
+          <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{item.kind}</span>
         </div>
 
-        <h1 style={{ fontSize: 24, fontWeight: 500, marginBottom: 16 }}>{detail.title}</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 500, marginBottom: 16 }}>{item.title}</h1>
 
-        {detail.snippet && (
+        {item.snippet && (
           <div
             style={{
               padding: 20,
@@ -132,7 +112,7 @@ export default function DetailPage() {
               color: "var(--text)",
             }}
           >
-            {detail.snippet}
+            {item.snippet}
           </div>
         )}
 
@@ -145,26 +125,28 @@ export default function DetailPage() {
             marginBottom: 24,
           }}
         >
-          {detail.author && (
+          {item.author && (
             <>
               <span style={{ color: "var(--text-secondary)" }}>作成者</span>
-              <span>{detail.author}</span>
+              <span>{item.author}</span>
             </>
           )}
-          <span style={{ color: "var(--text-secondary)" }}>更新日</span>
-          <span>{new Date(detail.updated_at).toLocaleString("ja-JP")}</span>
-          {Object.entries(detail.meta)
-            .filter(([, v]) => v !== null)
-            .map(([key, value]) => (
-              <div key={key} style={{ display: "contents" }}>
-                <span style={{ color: "var(--text-secondary)" }}>{key}</span>
-                <span>{value}</span>
-              </div>
-            ))}
+          {item.updated_at && (
+            <>
+              <span style={{ color: "var(--text-secondary)" }}>更新日</span>
+              <span>{new Date(item.updated_at).toLocaleString("ja-JP")}</span>
+            </>
+          )}
+          {metaEntries.map(([key, value]) => (
+            <div key={key} style={{ display: "contents" }}>
+              <span style={{ color: "var(--text-secondary)" }}>{metaLabels[key] ?? key}</span>
+              <span>{value}</span>
+            </div>
+          ))}
         </div>
 
         <a
-          href={detail.url}
+          href={item.url}
           target="_blank"
           rel="noopener noreferrer"
           style={{

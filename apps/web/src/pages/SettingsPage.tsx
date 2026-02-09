@@ -1,37 +1,20 @@
-const services = [
-  {
-    id: "slack",
-    name: "Slack",
-    icon: "💬",
-    status: "connected" as const,
-    color: "#4A154B",
-    description: "パブリックチャンネルのメッセージを検索",
-  },
-  {
-    id: "gmail",
-    name: "Gmail",
-    icon: "📧",
-    status: "connected" as const,
-    color: "#EA4335",
-    description: "メール（件名・本文・添付ファイル名）を検索",
-  },
-  {
-    id: "dropbox",
-    name: "Dropbox",
-    icon: "📦",
-    status: "disconnected" as const,
-    color: "#0061FF",
-    description: "ファイル名・ファイル内テキストを検索",
-  },
-  {
-    id: "drive",
-    name: "Google Drive",
-    icon: "📁",
-    status: "expired" as const,
-    color: "#0F9D58",
-    description: "ファイル名・ファイル内テキストを検索",
-  },
-];
+import { useState, useEffect } from "react";
+import type { ServiceConnectionInfo } from "../types/index";
+import { getServicesStatus, connectService, disconnectService } from "../api/client";
+
+const serviceIcons: Record<string, string> = {
+  slack: "S",
+  gmail: "G",
+  dropbox: "D",
+  drive: "Dr",
+};
+
+const serviceColorMap: Record<string, string> = {
+  slack: "#4A154B",
+  gmail: "#EA4335",
+  dropbox: "#0061FF",
+  drive: "#0F9D58",
+};
 
 const statusLabels: Record<string, { label: string; color: string; bg: string }> = {
   connected: { label: "接続済み", color: "var(--success)", bg: "#34a85315" },
@@ -40,6 +23,42 @@ const statusLabels: Record<string, { label: string; color: string; bg: string }>
 };
 
 export default function SettingsPage() {
+  const [services, setServices] = useState<ServiceConnectionInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    getServicesStatus()
+      .then(setServices)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleAction = async (svc: ServiceConnectionInfo) => {
+    setActionLoading(svc.id);
+    try {
+      let updated: ServiceConnectionInfo;
+      if (svc.status === "connected") {
+        updated = await disconnectService(svc.id);
+      } else {
+        updated = await connectService(svc.id);
+      }
+      setServices((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    } catch (err) {
+      void err;
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "calc(100vh - 60px)" }}>
+        <p style={{ color: "var(--text-secondary)" }}>読み込み中...</p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: 32 }}>
       <h2 style={{ fontSize: 22, fontWeight: 500, marginBottom: 8 }}>サービス連携設定</h2>
@@ -49,7 +68,8 @@ export default function SettingsPage() {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {services.map((svc) => {
-          const st = statusLabels[svc.status];
+          const st = statusLabels[svc.status] ?? statusLabels.disconnected;
+          const color = serviceColorMap[svc.id] ?? "var(--text)";
           return (
             <div
               key={svc.id}
@@ -64,7 +84,22 @@ export default function SettingsPage() {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <span style={{ fontSize: 28 }}>{svc.icon}</span>
+                <span
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: `${color}15`,
+                    color: color,
+                    fontWeight: 700,
+                    fontSize: 14,
+                  }}
+                >
+                  {serviceIcons[svc.id] ?? svc.id[0].toUpperCase()}
+                </span>
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 500, marginBottom: 2 }}>{svc.name}</h3>
                   <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>{svc.description}</p>
@@ -85,6 +120,8 @@ export default function SettingsPage() {
                   {st.label}
                 </span>
                 <button
+                  onClick={() => handleAction(svc)}
+                  disabled={actionLoading === svc.id}
                   style={{
                     padding: "8px 20px",
                     border: "1px solid var(--border)",
@@ -93,9 +130,16 @@ export default function SettingsPage() {
                     color: svc.status === "connected" ? "var(--text)" : "#fff",
                     fontSize: 13,
                     fontWeight: 500,
+                    opacity: actionLoading === svc.id ? 0.6 : 1,
                   }}
                 >
-                  {svc.status === "connected" ? "切断" : svc.status === "expired" ? "再接続" : "接続"}
+                  {actionLoading === svc.id
+                    ? "処理中..."
+                    : svc.status === "connected"
+                    ? "切断"
+                    : svc.status === "expired"
+                    ? "再接続"
+                    : "接続"}
                 </button>
               </div>
             </div>
@@ -104,7 +148,7 @@ export default function SettingsPage() {
       </div>
 
       <p style={{ marginTop: 24, fontSize: 12, color: "var(--text-secondary)", textAlign: "center" }}>
-        ※ V0.1（ダミー表示）— 実際の OAuth 連携は次バージョンで実装します
+        ※ 実際の OAuth 連携は SEC-01 に基づき別途設定が必要です
       </p>
     </div>
   );
