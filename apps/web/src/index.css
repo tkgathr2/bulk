@@ -1,0 +1,35 @@
+:root {
+  --primary: #1a73e8;
+  --primary-hover: #1557b0;
+  --bg: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --border: #dadce0;
+  --text: #202124;
+  --text-secondary: #5f6368;
+  --success: #34a853;
+  --error: #ea4335;
+  --warning: #fbbc04;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Google Sans', 'Roboto', 'Noto Sans JP', sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.6;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
