@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import type { ResultItem, ServiceResult, SearchResponse, SortOrder, ServiceId } from "../types/index";
 import { searchApi, saveSearchHistory } from "../api/client";
 
 const ALL_SERVICES: ServiceId[] = ["slack", "gmail", "dropbox", "drive"];
+const PAGE_SIZE = 20;
 
 const tabs: { id: string; label: string }[] = [
   { id: "all", label: "すべて" },
@@ -29,7 +30,7 @@ const sortOptions: { value: SortOrder; label: string }[] = [
 const errorMessages: Record<string, string> = {
   auth_required: "認証が必要です。設定画面でサービスを接続してください。",
   forbidden: "アクセス権限がありません。",
-  rate_limited: "リクエスト制限に達しました。数分待ってから再試行してください。",
+  rate_limited: "リクエスト制限に達しました。",
   network_error: "ネットワークエラーが発生しました。",
   unknown_error: "不明なエラーが発生しました。",
 };
@@ -61,15 +62,19 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const searchInFlight = useRef(false);
 
   const requestedServices: ServiceId[] = servicesParam
     ? (servicesParam.split(",") as ServiceId[])
     : ALL_SERVICES;
 
   const doSearch = useCallback(async () => {
-    if (!query) return;
+    if (!query || searchInFlight.current) return;
+    searchInFlight.current = true;
     setLoading(true);
     setError(null);
+    setVisibleCount(PAGE_SIZE);
     try {
       const result = await searchApi({
         query,
@@ -84,6 +89,7 @@ export default function ResultsPage() {
       setError(err instanceof Error ? err.message : "Search failed");
     } finally {
       setLoading(false);
+      searchInFlight.current = false;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, servicesParam, dateFrom, dateTo, fileTypeParam]);
@@ -93,7 +99,7 @@ export default function ResultsPage() {
   }, [doSearch]);
 
   const handleRetry = async (serviceId: string) => {
-    if (!searchResult) return;
+    if (!searchResult || searchInFlight.current) return;
     setRetrying(serviceId);
     try {
       const result = await searchApi({
@@ -124,7 +130,7 @@ export default function ResultsPage() {
     return searchResult?.services[svcId];
   };
 
-  const getItems = (): ResultItem[] => {
+  const getAllItems = (): ResultItem[] => {
     if (!searchResult) return [];
     if (activeTab === "all") {
       const allItems = Object.values(searchResult.services)
@@ -137,13 +143,21 @@ export default function ResultsPage() {
     return sortItems(svc.items, sortOrder);
   };
 
+  const getErrorServices = (): { id: string; result: ServiceResult }[] => {
+    if (!searchResult || activeTab !== "all") return [];
+    return Object.entries(searchResult.services)
+      .filter(([, r]) => r.status === "error")
+      .map(([id, result]) => ({ id, result }));
+  };
+
   const getTabBadge = (tabId: string): { text: string; isError: boolean } => {
     if (!searchResult) return { text: "...", isError: false };
     if (tabId === "all") {
       const total = Object.values(searchResult.services)
         .filter((s) => s.status === "success" || s.status === "partial")
         .reduce((sum, s) => sum + (s.total ?? 0), 0);
-      return { text: String(total), isError: false };
+      const hasError = Object.values(searchResult.services).some((s) => s.status === "error");
+      return { text: String(total), isError: hasError };
     }
     const svc = getServiceResult(tabId);
     if (!svc) return { text: "-", isError: false };
@@ -152,8 +166,21 @@ export default function ResultsPage() {
     return { text: String(svc.total ?? 0), isError: false };
   };
 
-  const items = getItems();
+  const allItems = getAllItems();
+  const visibleItems = allItems.slice(0, visibleCount);
+  const hasMore = visibleCount < allItems.length;
+  const errorServices = getErrorServices();
   const activeServiceResult = activeTab !== "all" ? getServiceResult(activeTab) : null;
+
+  const handleBackToSearch = () => {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (servicesParam) params.set("services", servicesParam);
+    if (dateFrom) params.set("date_from", dateFrom);
+    if (dateTo) params.set("date_to", dateTo);
+    if (fileTypeParam) params.set("file_type", fileTypeParam);
+    navigate(`/search?${params.toString()}`);
+  };
 
   if (loading) {
     return (
@@ -232,6 +259,20 @@ export default function ResultsPage() {
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
+        <button
+          onClick={handleBackToSearch}
+          style={{
+            padding: "8px 16px",
+            border: "1px solid var(--border)",
+            borderRadius: 6,
+            background: "var(--bg)",
+            fontSize: 13,
+            color: "var(--text)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          条件変更
+        </button>
       </div>
 
       <div
@@ -248,7 +289,10 @@ export default function ResultsPage() {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setVisibleCount(PAGE_SIZE);
+              }}
               style={{
                 padding: "12px 16px",
                 border: "none",
@@ -295,10 +339,32 @@ export default function ResultsPage() {
               <p style={{ color: "var(--error)", fontSize: 15, marginBottom: 8 }}>
                 {errorMessages[activeServiceResult.error_code ?? "unknown_error"]}
               </p>
+              {activeServiceResult.error_message && (
+                <p style={{ color: "var(--text-secondary)", fontSize: 13, marginBottom: 8 }}>
+                  {activeServiceResult.error_message}
+                </p>
+              )}
               {activeServiceResult.error_code === "rate_limited" && (
                 <p style={{ color: "var(--text-secondary)", fontSize: 13, marginBottom: 16 }}>
-                  数分待ってから再試行してください
+                  数分待ってから再試行してください。
                 </p>
+              )}
+              {activeServiceResult.error_code === "auth_required" && (
+                <button
+                  onClick={() => navigate("/settings")}
+                  style={{
+                    padding: "8px 20px",
+                    border: "1px solid var(--border)",
+                    borderRadius: 6,
+                    background: "var(--bg)",
+                    fontSize: 13,
+                    color: "var(--primary)",
+                    marginBottom: 12,
+                    marginRight: 8,
+                  }}
+                >
+                  設定画面へ
+                </button>
               )}
               <button
                 onClick={() => handleRetry(activeTab)}
@@ -315,12 +381,45 @@ export default function ResultsPage() {
                 {retrying === activeTab ? "再試行中..." : "再試行"}
               </button>
             </div>
-          ) : items.length === 0 ? (
-            <p style={{ padding: 24, color: "var(--text-secondary)", textAlign: "center" }}>
-              検索結果は 0 件です
-            </p>
           ) : (
-            items.map((item) => (
+            <>
+              {activeTab === "all" && errorServices.length > 0 && (
+                <div style={{ marginBottom: 16, padding: 16, background: "#FFF3E0", borderRadius: 8, border: "1px solid #FFE0B2" }}>
+                  {errorServices.map(({ id, result }) => (
+                    <div key={id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0" }}>
+                      <div>
+                        <span style={{ fontWeight: 500, color: serviceColors[id], textTransform: "uppercase" as const, fontSize: 13, marginRight: 8 }}>
+                          {id}
+                        </span>
+                        <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                          {errorMessages[result.error_code ?? "unknown_error"]}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleRetry(id)}
+                        disabled={retrying === id}
+                        style={{
+                          padding: "4px 12px",
+                          border: "none",
+                          borderRadius: 4,
+                          background: "var(--primary)",
+                          color: "#fff",
+                          fontSize: 12,
+                        }}
+                      >
+                        {retrying === id ? "再試行中..." : "再試行"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {visibleItems.length === 0 ? (
+                <p style={{ padding: 24, color: "var(--text-secondary)", textAlign: "center" }}>
+                  検索結果は 0 件です
+                </p>
+              ) : (
+                <>
+                  {visibleItems.map((item) => (
               <div
                 key={item.id}
                 onClick={() => setSelectedItem(item)}
@@ -369,7 +468,28 @@ export default function ResultsPage() {
                   )}
                 </div>
               </div>
-            ))
+                  ))}
+                  {hasMore && (
+                    <div style={{ textAlign: "center", padding: 16 }}>
+                      <button
+                        onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                        style={{
+                          padding: "10px 32px",
+                          border: "1px solid var(--border)",
+                          borderRadius: 6,
+                          background: "var(--bg)",
+                          fontSize: 14,
+                          color: "var(--primary)",
+                          fontWeight: 500,
+                        }}
+                      >
+                        もっと見る（残り {allItems.length - visibleCount} 件）
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </>
           )}
         </div>
 

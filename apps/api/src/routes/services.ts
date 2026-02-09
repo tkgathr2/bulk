@@ -1,5 +1,5 @@
 import { Router } from "express";
-import type { ServiceConnectionInfo, ConnectionStatus } from "../types/index.js";
+import type { ServiceConnectionInfo } from "../types/index.js";
 
 const router = Router();
 
@@ -34,4 +34,5 @@ router.post("/:id/disconnect", (req, res) => {
   res.json(svc);
 });
 
+export { serviceConnections };
 export default router;

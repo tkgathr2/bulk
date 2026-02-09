@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type { SearchRequest, ServiceId, SearchFilters, SearchHistoryEntry } from "../types/index.js";
 import { searchService } from "../connectors/index.js";
+import { serviceConnections } from "./services.js";
 
 const router = Router();
 
@@ -32,6 +33,19 @@ router.post("/", (req, res) => {
 
   const services: Record<string, ReturnType<typeof searchService>> = {};
   for (const svcId of requestedServices) {
+    const conn = serviceConnections.find((c) => c.id === svcId);
+    if (conn && conn.status !== "connected") {
+      services[svcId] = {
+        status: "error",
+        total: null,
+        items: [],
+        error_code: conn.status === "expired" ? "auth_required" : "auth_required",
+        error_message: conn.status === "expired"
+          ? "トークンの有効期限が切れています。設定画面で再接続してください。"
+          : "サービスが未接続です。設定画面で接続してください。",
+      };
+      continue;
+    }
     services[svcId] = searchService(svcId, {
       query,
       date_from: body.date_from,

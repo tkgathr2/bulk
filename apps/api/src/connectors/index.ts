@@ -45,7 +45,10 @@ function filterByFileType(items: ResultItem[], fileType: FileType | null | undef
       case "image":
         return mime.startsWith("image/");
       case "other":
-        return true;
+        return !mime.includes("document") && !mime.includes("wordprocessing") &&
+          !mime.includes("spreadsheet") && !mime.includes("excel") &&
+          !mime.includes("presentation") && !mime.includes("powerpoint") &&
+          !mime.includes("pdf") && !mime.startsWith("image/");
       default:
         return true;
     }
