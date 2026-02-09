@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>検索トップ - 一括検索君</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ヘッダー -->
+  <header class="header">
+    <div class="header__logo"><strong>一括検索君</strong></div>
+    <div class="header__search">
+      <span class="header__search-icon">&#128269;</span>
+      <input type="search" placeholder="検索...">
+    </div>
+    <div class="header__spacer"></div>
+    <a href="settings.html" class="header__settings" title="設定">&#9881;</a>
+    <div class="header__user">
+      <div class="header__avatar">T</div>
+      <span>田中 太郎</span>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- 検索ヒーロー -->
+    <div class="search-hero">
+      <h2>Slack・Gmail・Dropbox・Google Drive を横断検索</h2>
+
+      <div class="search-bar">
+        <input type="text" placeholder="ファイル名・本文・メール・メッセージを検索...">
+        <button class="btn btn--primary">検索</button>
+      </div>
+
+      <!-- フィルター -->
+      <div class="filters">
+        <div class="filter-row">
+          <span class="filter-label">サービス</span>
+          <div class="checkbox-group">
+            <label><input type="checkbox" checked> Slack</label>
+            <label><input type="checkbox" checked> Gmail</label>
+            <label><input type="checkbox" checked> Dropbox</label>
+            <label><input type="checkbox" checked> Google Drive</label>
+            <label><input type="checkbox" disabled> Sheets <span class="coming-soon">今後対応</span></label>
+          </div>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">日付範囲</span>
+          <input type="date" value="2025-01-01"> ～ <input type="date" value="2025-12-31">
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">ファイル種別</span>
+          <div class="checkbox-group">
+            <label><input type="checkbox" checked> ドキュメント</label>
+            <label><input type="checkbox" checked> スプレッドシート</label>
+            <label><input type="checkbox" checked> PDF</label>
+            <label><input type="checkbox"> 画像</label>
+            <label><input type="checkbox"> その他</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 検索履歴 -->
+      <div class="search-history" style="margin-top:28px;">
+        <div class="search-history-label">最近の検索</div>
+        <div class="search-history-list">
+          <div class="search-history-item"><span class="history-icon">&#128336;</span> 月次報告書 2025</div>
+          <div class="search-history-item"><span class="history-icon">&#128336;</span> プロジェクトX 進捗</div>
+          <div class="search-history-item"><span class="history-icon">&#128336;</span> 契約書 ドラフト</div>
+          <div class="search-history-item"><span class="history-icon">&#128336;</span> 売上データ Q3</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">&copy; 2025 一括検索君 — 社内横断検索ツール</footer>
+</body>
+</html>

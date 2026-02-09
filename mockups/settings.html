@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>サービス連携設定 - 一括検索君</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ヘッダー -->
+  <header class="header">
+    <div class="header__logo"><strong>一括検索君</strong></div>
+    <div class="header__search">
+      <span class="header__search-icon">&#128269;</span>
+      <input type="search" placeholder="検索...">
+    </div>
+    <div class="header__spacer"></div>
+    <a href="settings.html" class="header__settings" title="設定">&#9881;</a>
+    <div class="header__user">
+      <div class="header__avatar">T</div>
+      <span>田中 太郎</span>
+    </div>
+  </header>
+
+  <main class="main" style="max-width:800px;">
+    <div style="margin-bottom:16px;">
+      <a href="search.html" style="font-size:14px;color:#1a73e8;">&larr; 検索トップに戻る</a>
+    </div>
+
+    <h2 style="font-size:20px;margin-bottom:20px;color:#202124;">サービス連携設定</h2>
+
+    <div class="card">
+      <div class="service-list">
+        <!-- Slack -->
+        <div class="service-row">
+          <div class="service-info">
+            <div class="service-icon result-icon--slack">S</div>
+            <div>
+              <div class="service-name">Slack</div>
+              <div class="service-status">
+                <span class="status-dot status-dot--connected"></span>
+                <span style="color:#1e8e3e;">接続済み</span>
+                <span style="color:#80868b;margin-left:8px;">workspace: acme-corp.slack.com</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn--danger" style="font-size:13px;padding:8px 16px;">切断</button>
+        </div>
+
+        <!-- Gmail -->
+        <div class="service-row">
+          <div class="service-info">
+            <div class="service-icon result-icon--gmail">M</div>
+            <div>
+              <div class="service-name">Gmail</div>
+              <div class="service-status">
+                <span class="status-dot status-dot--connected"></span>
+                <span style="color:#1e8e3e;">接続済み</span>
+                <span style="color:#80868b;margin-left:8px;">tanaka@acme-corp.com</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn--danger" style="font-size:13px;padding:8px 16px;">切断</button>
+        </div>
+
+        <!-- Dropbox -->
+        <div class="service-row">
+          <div class="service-info">
+            <div class="service-icon result-icon--dropbox">B</div>
+            <div>
+              <div class="service-name">Dropbox</div>
+              <div class="service-status">
+                <span class="status-dot status-dot--disconnected"></span>
+                <span style="color:#80868b;">未接続</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn--primary" style="font-size:13px;padding:8px 16px;">接続する</button>
+        </div>
+
+        <!-- Google Drive -->
+        <div class="service-row">
+          <div class="service-info">
+            <div class="service-icon result-icon--drive">D</div>
+            <div>
+              <div class="service-name">Google Drive</div>
+              <div class="service-status">
+                <span class="status-dot status-dot--connected"></span>
+                <span style="color:#1e8e3e;">接続済み</span>
+                <span style="color:#80868b;margin-left:8px;">tanaka@acme-corp.com</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn--danger" style="font-size:13px;padding:8px 16px;">切断</button>
+        </div>
+
+        <!-- Google Sheets (今後) -->
+        <div class="service-row" style="opacity:0.6;">
+          <div class="service-info">
+            <div class="service-icon" style="background:#e6f4ea;color:#1e8e3e;">G</div>
+            <div>
+              <div class="service-name">Google Sheets <span class="coming-soon">今後対応予定</span></div>
+              <div class="service-status">
+                <span style="color:#80868b;">準備中</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn--secondary" style="font-size:13px;padding:8px 16px;" disabled>準備中</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 注意文 -->
+    <div class="notice">
+      <span class="notice-icon">&#9888;</span>
+      <div>
+        <strong>アクセス権限について</strong><br>
+        各サービスの検索結果は、ログインユーザーの権限範囲内のデータのみが表示されます。他のユーザーのプライベートデータや、アクセス権のないファイル・チャンネルは検索結果に含まれません。
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">&copy; 2025 一括検索君 — 社内横断検索ツール</footer>
+</body>
+</html>
