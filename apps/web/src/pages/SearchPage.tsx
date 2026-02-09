@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { ServiceId, FileType, SearchHistoryEntry } from "../types/index";
 import { getSearchHistory, deleteSearchHistoryItem, deleteAllSearchHistory } from "../api/client";
 
@@ -21,14 +21,16 @@ const fileTypeOptions: { value: FileType; label: string }[] = [
 
 export default function SearchPage() {
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-  const [services, setServices] = useState<ServiceId[]>(
-    serviceOptions.map((s) => s.id)
-  );
+  const [searchParams] = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
+  const [services, setServices] = useState<ServiceId[]>(() => {
+    const sp = searchParams.get("services");
+    return sp ? (sp.split(",") as ServiceId[]) : serviceOptions.map((s) => s.id);
+  });
   const [showFilters, setShowFilters] = useState(false);
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [fileType, setFileType] = useState<FileType | "">("");
+  const [dateFrom, setDateFrom] = useState(searchParams.get("date_from") ?? "");
+  const [dateTo, setDateTo] = useState(searchParams.get("date_to") ?? "");
+  const [fileType, setFileType] = useState<FileType | "">((searchParams.get("file_type") as FileType | "") ?? "");
   const [history, setHistory] = useState<SearchHistoryEntry[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -355,8 +357,9 @@ export default function SearchPage() {
         </div>
       )}
 
-      <p style={{ marginTop: 32, fontSize: 12, color: "var(--text-secondary)" }}>
-        Slack（パブリックのみ）/ Gmail / Dropbox / Google Drive を横断検索します
+      <p style={{ marginTop: 32, fontSize: 12, color: "var(--text-secondary)", textAlign: "center", lineHeight: 1.8 }}>
+        Slack / Gmail / Dropbox / Google Drive を横断検索します<br />
+        ※ Slack はパブリックチャンネルのみ対象です（DM・プライベートチャンネルは今後対応予定）
       </p>
     </div>
   );
