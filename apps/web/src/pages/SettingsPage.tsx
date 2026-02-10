@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { ServiceConnectionInfo } from "../types/index";
-import { getServicesStatus, connectService, disconnectService } from "../api/client";
+import { getServicesStatus, disconnectService, getServiceAuthUrl } from "../api/client";
 
 const serviceIcons: Record<string, string> = {
   slack: "S",
@@ -37,13 +37,12 @@ export default function SettingsPage() {
   const handleAction = async (svc: ServiceConnectionInfo) => {
     setActionLoading(svc.id);
     try {
-      let updated: ServiceConnectionInfo;
       if (svc.status === "connected") {
-        updated = await disconnectService(svc.id);
+        const updated = await disconnectService(svc.id);
+        setServices((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
       } else {
-        updated = await connectService(svc.id);
+        window.location.href = getServiceAuthUrl(svc.id);
       }
-      setServices((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
     } catch (err) {
       void err;
     } finally {
@@ -148,7 +147,7 @@ export default function SettingsPage() {
       </div>
 
       <p style={{ marginTop: 24, fontSize: 12, color: "var(--text-secondary)", textAlign: "center" }}>
-        ※ 実際の OAuth 連携は SEC-01 に基づき別途設定が必要です
+        ※ 各サービスの OAuth 認証情報は SEC-01 に基づき環境変数で管理されています
       </p>
     </div>
   );

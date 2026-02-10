@@ -1,14 +1,14 @@
 import { Router } from "express";
-import type { SearchRequest, ServiceId, SearchFilters, SearchHistoryEntry } from "../types/index.js";
-import { searchService } from "../connectors/index.js";
-import { serviceConnections } from "./services.js";
+import type { SearchRequest, ServiceId, SearchFilters, SearchHistoryEntry, ServiceResult } from "../types/index.js";
+import { searchServiceReal, searchServiceMock } from "../connectors/index.js";
+import { getToken, getConnectionStatus } from "../store/tokens.js";
 
 const router = Router();
 
 const searchHistory: SearchHistoryEntry[] = [];
 const MAX_HISTORY = 30;
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   const body = req.body as SearchRequest;
   const query = (body.query ?? "").trim();
 
@@ -31,29 +31,61 @@ router.post("/", (req, res) => {
     file_type: body.file_type ?? null,
   };
 
-  const services: Record<string, ReturnType<typeof searchService>> = {};
-  for (const svcId of requestedServices) {
-    const conn = serviceConnections.find((c) => c.id === svcId);
-    if (conn && conn.status !== "connected") {
-      services[svcId] = {
-        status: "error",
-        total: null,
-        items: [],
-        error_code: conn.status === "expired" ? "auth_required" : "auth_required",
-        error_message: conn.status === "expired"
-          ? "トークンの有効期限が切れています。設定画面で再接続してください。"
-          : "サービスが未接続です。設定画面で接続してください。",
-      };
-      continue;
+  const searchRequest: SearchRequest = {
+    query,
+    date_from: body.date_from,
+    date_to: body.date_to,
+    file_type: body.file_type,
+    offset: body.offset,
+    limit: body.limit,
+  };
+
+  const servicePromises: Promise<[ServiceId, ServiceResult]>[] = requestedServices.map(
+    async (svcId): Promise<[ServiceId, ServiceResult]> => {
+      const connStatus = getConnectionStatus(req, svcId);
+
+      if (connStatus !== "connected") {
+        return [
+          svcId,
+          {
+            status: "error",
+            total: null,
+            items: [],
+            error_code: "auth_required",
+            error_message: connStatus === "expired"
+              ? "トークンの有効期限が切れています。設定画面で再接続してください。"
+              : "サービスが未接続です。設定画面で接続してください。",
+          },
+        ];
+      }
+
+      const token = getToken(req, svcId);
+      if (!token) {
+        return [svcId, searchServiceMock(svcId, searchRequest)];
+      }
+
+      try {
+        const result = await searchServiceReal(svcId, token, searchRequest);
+        return [svcId, result];
+      } catch {
+        return [
+          svcId,
+          {
+            status: "error",
+            total: null,
+            items: [],
+            error_code: "network_error",
+            error_message: "検索中にエラーが発生しました。",
+          },
+        ];
+      }
     }
-    services[svcId] = searchService(svcId, {
-      query,
-      date_from: body.date_from,
-      date_to: body.date_to,
-      file_type: body.file_type,
-      offset: body.offset,
-      limit: body.limit,
-    });
+  );
+
+  const results = await Promise.all(servicePromises);
+  const services: Record<string, ServiceResult> = {};
+  for (const [id, result] of results) {
+    services[id] = result;
   }
 
   res.json({

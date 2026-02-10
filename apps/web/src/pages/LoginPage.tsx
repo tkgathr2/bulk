@@ -1,7 +1,33 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAuthMe, getLoginUrl } from "../api/client";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    getAuthMe()
+      .then((data) => {
+        if (data.authenticated) {
+          navigate("/search", { replace: true });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setChecking(false));
+  }, [navigate]);
+
+  const handleLogin = () => {
+    window.location.href = getLoginUrl();
+  };
+
+  if (checking) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "var(--bg-secondary)" }}>
+        <p style={{ color: "var(--text-secondary)" }}>確認中...</p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -44,7 +70,7 @@ export default function LoginPage() {
           Slack / Gmail / Dropbox / Google Drive を横断検索
         </p>
         <button
-          onClick={() => navigate("/search")}
+          onClick={handleLogin}
           style={{
             display: "flex",
             alignItems: "center",
@@ -75,7 +101,7 @@ export default function LoginPage() {
             color: "var(--text-secondary)",
           }}
         >
-          ※ V0.1（ダミー認証）— クリックで検索画面へ遷移します
+          ※ Google アカウントでログインしてください
         </p>
       </div>
     </div>

@@ -1,13 +1,43 @@
 import type { ServiceId, ServiceResult, SearchRequest, FileType } from "../types/index.js";
+import type { TokenData } from "../store/tokens.js";
+import { searchSlack } from "./slack.js";
+import { searchGmail } from "./gmail.js";
+import { searchDrive } from "./drive.js";
+import { searchDropbox } from "./dropbox.js";
 import { slackItems, gmailItems, dropboxItems, driveItems } from "./mock-data.js";
 import type { ResultItem } from "../types/index.js";
 
-const allItems: Record<ServiceId, ResultItem[]> = {
+const mockItems: Record<ServiceId, ResultItem[]> = {
   slack: slackItems,
   gmail: gmailItems,
   dropbox: dropboxItems,
   drive: driveItems,
 };
+
+export async function searchServiceReal(
+  serviceId: ServiceId,
+  token: TokenData,
+  request: SearchRequest
+): Promise<ServiceResult> {
+  switch (serviceId) {
+    case "slack":
+      return searchSlack(token.access_token, request);
+    case "gmail":
+      return searchGmail(token.access_token, request);
+    case "drive":
+      return searchDrive(token.access_token, request);
+    case "dropbox":
+      return searchDropbox(token.access_token, request);
+    default:
+      return {
+        status: "error",
+        total: null,
+        items: [],
+        error_code: "unknown_error",
+        error_message: `Unknown service: ${serviceId}`,
+      };
+  }
+}
 
 function filterByDate(items: ResultItem[], dateFrom: string | null | undefined, dateTo: string | null | undefined): ResultItem[] {
   let filtered = items;
@@ -63,11 +93,11 @@ function filterByQuery(items: ResultItem[], query: string): ResultItem[] {
   });
 }
 
-export function searchService(
+export function searchServiceMock(
   serviceId: ServiceId,
   request: SearchRequest
 ): ServiceResult {
-  const sourceItems = allItems[serviceId];
+  const sourceItems = mockItems[serviceId];
   if (!sourceItems) {
     return {
       status: "error",
