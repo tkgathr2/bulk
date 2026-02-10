@@ -1,4 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { logout } from "../api/client";
 
 const navItems = [
   { to: "/search", label: "検索" },
@@ -7,6 +8,11 @@ const navItems = [
 
 export default function Layout() {
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -28,7 +34,7 @@ export default function Layout() {
             一括検索君
           </span>
         </div>
-        <nav style={{ display: "flex", gap: 8 }}>
+        <nav style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -47,6 +53,22 @@ export default function Layout() {
               {item.label}
             </NavLink>
           ))}
+          <button
+            onClick={handleLogout}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 20,
+              fontSize: 14,
+              fontWeight: 500,
+              background: "transparent",
+              color: "var(--text-secondary)",
+              border: "none",
+              cursor: "pointer",
+              marginLeft: 8,
+            }}
+          >
+            ログアウト
+          </button>
         </nav>
       </header>
       <main style={{ flex: 1 }}>

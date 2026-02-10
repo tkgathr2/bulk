@@ -78,4 +78,5 @@ export interface ServiceConnectionInfo {
   name: string;
   status: ConnectionStatus;
   description: string;
+  auth_url?: string;
 }

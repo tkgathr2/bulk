@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import type { ResultItem, ServiceResult, SearchResponse, SortOrder, ServiceId } from "../types/index";
+import type { ResultItem, ServiceResult, SearchResponse, SortOrder, ServiceId, FileType } from "../types/index";
 import { searchApi, saveSearchHistory } from "../api/client";
 
 const ALL_SERVICES: ServiceId[] = ["slack", "gmail", "dropbox", "drive"];
@@ -81,7 +81,7 @@ export default function ResultsPage() {
         services: requestedServices,
         date_from: dateFrom,
         date_to: dateTo,
-        file_type: fileTypeParam as ResultItem["kind"] | null,
+        file_type: (fileTypeParam as FileType) ?? null,
       });
       setSearchResult(result);
       await saveSearchHistory(query, result.filters).catch(() => {});
@@ -107,7 +107,7 @@ export default function ResultsPage() {
         services: [serviceId as ServiceId],
         date_from: dateFrom,
         date_to: dateTo,
-        file_type: fileTypeParam as ResultItem["kind"] | null,
+        file_type: (fileTypeParam as FileType) ?? null,
       });
       setSearchResult((prev) => {
         if (!prev) return result;
