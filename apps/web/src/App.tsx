@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import SearchPage from "./pages/SearchPage";
 import ResultsPage from "./pages/ResultsPage";
@@ -11,11 +12,13 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route element={<Layout />}>
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/results" element={<ResultsPage />} />
-          <Route path="/detail/:id" element={<DetailPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/results" element={<ResultsPage />} />
+            <Route path="/detail/:id" element={<DetailPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
