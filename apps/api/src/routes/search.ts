@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { SearchRequest, ServiceId, SearchFilters, SearchHistoryEntry, ServiceResult } from "../types/index.js";
-import { searchServiceReal, searchServiceMock } from "../connectors/index.js";
+import { searchServiceReal } from "../connectors/index.js";
 import { getToken, getConnectionStatus } from "../store/tokens.js";
 
 const router = Router();
@@ -61,7 +61,16 @@ router.post("/", async (req, res) => {
 
       const token = getToken(req, svcId);
       if (!token) {
-        return [svcId, searchServiceMock(svcId, searchRequest)];
+        return [
+          svcId,
+          {
+            status: "error",
+            total: null,
+            items: [],
+            error_code: "auth_required",
+            error_message: "サービスが未接続です。設定画面で接続してください。",
+          },
+        ];
       }
 
       try {
