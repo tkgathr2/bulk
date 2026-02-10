@@ -1,9 +1,13 @@
 {
-  "name": "bulk-search-mockup",
+  "name": "bulk-search",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "screenshots": "node scripts/screenshot.mjs"
+    "screenshots": "node scripts/screenshot.mjs",
+    "build": "npm run build:web && npm run build:api",
+    "build:web": "cd apps/web && VITE_API_BASE='' npm run build",
+    "build:api": "cd apps/api && npm run build",
+    "start": "cd apps/api && NODE_ENV=production node dist/index.js"
   },
   "devDependencies": {
     "playwright": "^1.58.2"

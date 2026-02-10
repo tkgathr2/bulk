@@ -1,4 +1,6 @@
 import "dotenv/config";
+import path from "path";
+import { fileURLToPath } from "url";
 import express from "express";
 import cors from "cors";
 import session from "express-session";
@@ -6,14 +8,20 @@ import searchRouter from "./routes/search.js";
 import servicesRouter from "./routes/services.js";
 import authRouter from "./auth/index.js";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = 8080;
+const PORT = Number(process.env.PORT) || 8080;
+const IS_PROD = process.env.NODE_ENV === "production";
 
 const WEB_BASE = process.env.WEB_BASE_URL ?? "http://localhost:5173";
 
+if (IS_PROD) {
+  app.set("trust proxy", 1);
+}
+
 app.use(
   cors({
-    origin: WEB_BASE,
+    origin: IS_PROD ? true : WEB_BASE,
     credentials: true,
   })
 );
@@ -25,7 +33,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false,
+      secure: IS_PROD,
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000,
       sameSite: "lax",
@@ -40,6 +48,14 @@ app.get("/health", (_req, res) => {
 app.use("/auth", authRouter);
 app.use("/search", searchRouter);
 app.use("/services", servicesRouter);
+
+if (IS_PROD) {
+  const staticDir = path.resolve(__dirname, "../../web/dist");
+  app.use(express.static(staticDir));
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(staticDir, "index.html"));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`API server listening on http://localhost:${PORT}`);
