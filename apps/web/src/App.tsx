@@ -6,6 +6,7 @@ import SearchPage from "./pages/SearchPage";
 import ResultsPage from "./pages/ResultsPage";
 import DetailPage from "./pages/DetailPage";
 import SettingsPage from "./pages/SettingsPage";
+import GuidePage from "./pages/GuidePage";
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
             <Route path="/results" element={<ResultsPage />} />
             <Route path="/detail/:id" element={<DetailPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/guide" element={<GuidePage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />

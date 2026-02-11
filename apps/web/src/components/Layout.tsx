@@ -4,6 +4,7 @@ import { logout } from "../api/client";
 const navItems = [
   { to: "/search", label: "検索" },
   { to: "/settings", label: "設定" },
+  { to: "/guide", label: "使い方" },
 ];
 
 export default function Layout() {
