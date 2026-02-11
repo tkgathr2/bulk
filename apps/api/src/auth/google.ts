@@ -89,8 +89,12 @@ router.get("/login/callback", async (req, res) => {
       name: (userData.name as string) ?? "",
     };
 
-    res.redirect(`${cfg.webBase}/settings`);
-  } catch {
+    req.session.save((err) => {
+      if (err) console.error("[auth] session save error:", err);
+      res.redirect(`${cfg.webBase}/settings`);
+    });
+  } catch (err) {
+    console.error("[auth] login callback error:", err);
     res.redirect(`${cfg.webBase}/?error=login_failed`);
   }
 });
@@ -150,8 +154,12 @@ function makeServiceAuthHandler(serviceId: ServiceId, scopes: string[]) {
         token_type: (tokenData.token_type as string) ?? "Bearer",
       });
 
-      res.redirect(`${cfg.webBase}/settings?connected=${serviceId}`);
-    } catch {
+      req.session.save((err) => {
+        if (err) console.error(`[auth] session save error (${serviceId}):`, err);
+        res.redirect(`${cfg.webBase}/settings?connected=${serviceId}`);
+      });
+    } catch (err) {
+      console.error(`[auth] ${serviceId} callback error:`, err);
       res.redirect(`${cfg.webBase}/settings?error=auth_failed&service=${serviceId}`);
     }
   });
