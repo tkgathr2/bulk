@@ -88,7 +88,7 @@ router.get("/login/callback", async (req, res) => {
       name: (userData.name as string) ?? "",
     };
 
-    res.redirect(`${cfg.webBase}/search`);
+    res.redirect(`${cfg.webBase}/settings`);
   } catch {
     res.redirect(`${cfg.webBase}/?error=login_failed`);
   }
