@@ -19,6 +19,9 @@ pnpm-debug.log*
 .env.*
 !.env.example
 
+# Sessions
+.sessions/
+
 # OS / Editor
 .DS_Store
 Thumbs.db

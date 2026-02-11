@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import type { ServiceId, FileType, SearchHistoryEntry } from "../types/index";
 import { getSearchHistory, deleteSearchHistoryItem, deleteAllSearchHistory } from "../api/client";
 
@@ -18,6 +18,78 @@ const fileTypeOptions: { value: FileType; label: string }[] = [
   { value: "image", label: "画像" },
   { value: "other", label: "その他" },
 ];
+
+const NOTICE_DISMISSED_KEY = "bulk_notice_dismissed";
+
+function NoticeBanner() {
+  const [dismissed, setDismissed] = useState(() => localStorage.getItem(NOTICE_DISMISSED_KEY) === "1");
+
+  if (dismissed) return null;
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 680,
+        marginBottom: 24,
+        padding: "16px 20px",
+        borderRadius: 12,
+        border: "2px solid var(--primary)",
+        background: "linear-gradient(135deg, #1a73e810 0%, #fbbc0415 100%)",
+        position: "relative",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <span style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>&#x1F4E2;</span>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 16, color: "var(--primary)", marginBottom: 6 }}>
+            はじめに：使い方を確認してください
+          </div>
+          <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.7, margin: 0 }}>
+            検索する前に、まず<strong>設定画面でサービスを接続</strong>してください。
+            Slack・Gmail・Dropbox・Google Drive を接続すると横断検索ができます。
+          </p>
+          <Link
+            to="/guide"
+            style={{
+              display: "inline-block",
+              marginTop: 10,
+              padding: "8px 20px",
+              borderRadius: 6,
+              background: "var(--primary)",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            使い方を見る
+          </Link>
+        </div>
+        <button
+          onClick={() => {
+            localStorage.setItem(NOTICE_DISMISSED_KEY, "1");
+            setDismissed(true);
+          }}
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 12,
+            border: "none",
+            background: "transparent",
+            fontSize: 20,
+            color: "var(--text-secondary)",
+            cursor: "pointer",
+            padding: 4,
+          }}
+          title="閉じる"
+        >
+          &times;
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function SearchPage() {
   const navigate = useNavigate();
@@ -107,6 +179,8 @@ export default function SearchPage() {
         padding: 24,
       }}
     >
+      <NoticeBanner />
+
       <h2
         style={{
           fontSize: 32,

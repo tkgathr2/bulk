@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { SearchRequest, ServiceId, SearchFilters, SearchHistoryEntry, ServiceResult } from "../types/index.js";
 import { searchServiceReal } from "../connectors/index.js";
 import { getToken, getConnectionStatus } from "../store/tokens.js";
+import { ensureFreshToken } from "../store/refresh.js";
 
 const router = Router();
 
@@ -59,8 +60,9 @@ router.post("/", async (req, res) => {
         ];
       }
 
+      const freshAccessToken = await ensureFreshToken(req, svcId);
       const token = getToken(req, svcId);
-      if (!token) {
+      if (!token || !freshAccessToken) {
         return [
           svcId,
           {
@@ -74,7 +76,7 @@ router.post("/", async (req, res) => {
       }
 
       try {
-        const result = await searchServiceReal(svcId, token, searchRequest);
+        const result = await searchServiceReal(svcId, { ...token, access_token: freshAccessToken }, searchRequest);
         return [svcId, result];
       } catch {
         return [
