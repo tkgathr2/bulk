@@ -1,6 +1,8 @@
 import type { ResultItem, ServiceResult, SearchRequest } from "../types/index.js";
 
 const DROPBOX_SEARCH_URL = "https://api.dropboxapi.com/2/files/search_v2";
+const DROPBOX_CONTINUE_URL = "https://api.dropboxapi.com/2/files/search/continue_v2";
+const MAX_RESULTS = 100;
 
 const CATEGORY_MAP: Record<string, string> = {
   document: "document",
@@ -67,7 +69,7 @@ export async function searchDropbox(
 ): Promise<ServiceResult> {
   try {
     const options: Record<string, unknown> = {
-      max_results: request.limit ?? 20,
+      max_results: MAX_RESULTS,
       file_status: { ".tag": "active" },
       filename_only: false,
     };
@@ -129,11 +131,25 @@ export async function searchDropbox(
       };
     }
 
-    const data = await res.json() as Record<string, unknown>;
-    const matches = (data.matches as Array<Record<string, unknown>>) ?? [];
-    const hasMore = data.has_more as boolean;
+    let allMatches: Array<Record<string, unknown>> = [];
+    let data = await res.json() as Record<string, unknown>;
+    allMatches.push(...((data.matches as Array<Record<string, unknown>>) ?? []));
 
-    const mapped = matches
+    while (data.has_more && data.cursor) {
+      const contRes = await fetch(DROPBOX_CONTINUE_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ cursor: data.cursor }),
+      });
+      if (!contRes.ok) break;
+      data = await contRes.json() as Record<string, unknown>;
+      allMatches.push(...((data.matches as Array<Record<string, unknown>>) ?? []));
+    }
+
+    const mapped = allMatches
       .map((m): ResultItem | null => {
         const metadataWrapper = m.metadata as Record<string, unknown> | undefined;
         const metadata = metadataWrapper?.metadata as Record<string, unknown> | undefined;
@@ -201,7 +217,7 @@ export async function searchDropbox(
     const filteredItems = applyLocalFilters(items, request);
 
     return {
-      status: hasMore ? "partial" : "success",
+      status: "success",
       total: filteredItems.length,
       items: filteredItems,
       error_code: null,

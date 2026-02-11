@@ -66,14 +66,15 @@ export async function searchDrive(
 
     driveQuery += " and trashed = false";
 
-    const params = new URLSearchParams({
+    const baseParams: Record<string, string> = {
       q: driveQuery,
-      pageSize: String(request.limit ?? 20),
+      pageSize: "100",
       fields: "files(id,name,mimeType,modifiedTime,owners,webViewLink,parents,size,description),nextPageToken",
       supportsAllDrives: "true",
       includeItemsFromAllDrives: "true",
-    });
+    };
 
+    const params = new URLSearchParams(baseParams);
     const res = await fetch(`${DRIVE_FILES_URL}?${params}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -108,11 +109,21 @@ export async function searchDrive(
       };
     }
 
-    const data = await res.json() as Record<string, unknown>;
-    const files = (data.files as Array<Record<string, unknown>>) ?? [];
-    const hasMore = !!data.nextPageToken;
+    let allFiles: Array<Record<string, unknown>> = [];
+    let data = await res.json() as Record<string, unknown>;
+    allFiles.push(...((data.files as Array<Record<string, unknown>>) ?? []));
 
-    const items: ResultItem[] = files.map((f) => {
+    while (data.nextPageToken) {
+      const nextParams = new URLSearchParams({ ...baseParams, pageToken: data.nextPageToken as string });
+      const nextRes = await fetch(`${DRIVE_FILES_URL}?${nextParams}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!nextRes.ok) break;
+      data = await nextRes.json() as Record<string, unknown>;
+      allFiles.push(...((data.files as Array<Record<string, unknown>>) ?? []));
+    }
+
+    const items: ResultItem[] = allFiles.map((f) => {
       const owners = (f.owners as Array<Record<string, unknown>>) ?? [];
       const ownerEmail = (owners[0]?.emailAddress as string) ?? null;
       const mimeType = (f.mimeType as string) ?? undefined;
@@ -140,7 +151,7 @@ export async function searchDrive(
     });
 
     return {
-      status: hasMore ? "partial" : "success",
+      status: "success",
       total: items.length,
       items,
       error_code: null,
