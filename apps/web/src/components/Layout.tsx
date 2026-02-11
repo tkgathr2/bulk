@@ -3,10 +3,19 @@ import { logout } from "../api/client";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 const navItems = [
-  { to: "/search", label: "検索" },
-  { to: "/settings", label: "設定" },
-  { to: "/guide", label: "使い方" },
+  { to: "/search", label: "検索", icon: null },
+  { to: "/settings", label: null, icon: "gear" },
+  { to: "/guide", label: "使い方", icon: null },
 ];
+
+function GearIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -43,8 +52,9 @@ export default function Layout() {
             <NavLink
               key={item.to}
               to={item.to}
+              title={item.icon === "gear" ? "設定" : undefined}
               style={({ isActive }) => ({
-                padding: isMobile ? "6px 10px" : "8px 16px",
+                padding: item.icon === "gear" ? (isMobile ? "6px 8px" : "8px 10px") : (isMobile ? "6px 10px" : "8px 16px"),
                 borderRadius: 20,
                 fontSize: isMobile ? 12 : 14,
                 fontWeight: 500,
@@ -53,9 +63,12 @@ export default function Layout() {
                 border: "none",
                 textDecoration: "none",
                 whiteSpace: "nowrap",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
               })}
             >
-              {item.label}
+              {item.icon === "gear" ? <GearIcon size={isMobile ? 14 : 18} /> : item.label}
             </NavLink>
           ))}
           <button

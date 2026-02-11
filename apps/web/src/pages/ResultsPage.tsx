@@ -4,8 +4,8 @@ import type { ResultItem, ServiceResult, SearchResponse, SortOrder, ServiceId, F
 import { searchApi, saveSearchHistory } from "../api/client";
 import { useIsMobile } from "../hooks/useIsMobile";
 
-const NOTICE_KEY = "bulk_results_notice_v1";
-const NOTICE_TEXT = "Dropbox・Google Driveの検索結果にファイル形式バッジとフォルダパスが表示されるようになりました。詳細ページでは API の全情報を確認できます。";
+const NOTICE_KEY = "bulk_results_notice_v2";
+const NOTICE_TEXT = "【重要な更新】ファイル形式バッジ・フォルダパス表示・全件取得に対応しました。詳細ページで API 全情報を確認できます。";
 
 function ResultsNoticeBanner() {
   const [dismissed, setDismissed] = useState(() => localStorage.getItem(NOTICE_KEY) === "1");

@@ -25,7 +25,7 @@ const fileTypeOptions: { value: FileType; label: string }[] = [
   { value: "other", label: "その他" },
 ];
 
-const NOTICE_DISMISSED_KEY = "bulk_notice_dismissed";
+const NOTICE_DISMISSED_KEY = "bulk_notice_v2";
 
 function NoticeBanner() {
   const [dismissed, setDismissed] = useState(() => localStorage.getItem(NOTICE_DISMISSED_KEY) === "1");
@@ -40,36 +40,39 @@ function NoticeBanner() {
         marginBottom: 24,
         padding: "16px 20px",
         borderRadius: 12,
-        border: "2px solid var(--primary)",
-        background: "linear-gradient(135deg, #1a73e810 0%, #fbbc0415 100%)",
+        border: "2px solid #E53935",
+        background: "linear-gradient(135deg, #E5393508 0%, #FF980015 100%)",
         position: "relative",
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-        <span style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>&#x1F4E2;</span>
+        <span style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>&#x1F6A8;</span>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 16, color: "var(--primary)", marginBottom: 6 }}>
-            はじめに：使い方を確認してください
+          <div style={{ fontWeight: 700, fontSize: 16, color: "#E53935", marginBottom: 6 }}>
+            重要な更新
           </div>
-          <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.7, margin: 0 }}>
-            検索する前に、まず<strong>設定画面でサービスを接続</strong>してください。
-            Slack・Gmail・Dropbox・Google Drive を接続すると横断検索ができます。
-          </p>
+          <ul style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.8, margin: 0, paddingLeft: 18 }}>
+            <li>Dropbox・Google Drive の検索結果に<strong>ファイル形式バッジ</strong>（PDF / Word / Excel 等）を追加</li>
+            <li>フォルダパス・ファイルサイズを結果カードに表示</li>
+            <li>詳細ページで <strong>API の全メタデータ</strong>を確認可能に</li>
+            <li>検索フィルターに<strong>フォルダ・動画・音声・圧縮ファイル・テキスト</strong>を追加</li>
+            <li>Dropbox・Google Drive の検索上限を<strong>20件→全件取得</strong>に拡張</li>
+          </ul>
           <Link
-            to="/guide"
+            to="/settings"
             style={{
               display: "inline-block",
               marginTop: 10,
               padding: "8px 20px",
               borderRadius: 6,
-              background: "var(--primary)",
+              background: "#E53935",
               color: "#fff",
               fontSize: 14,
               fontWeight: 600,
               textDecoration: "none",
             }}
           >
-            使い方を見る
+            機能の詳細を見る
           </Link>
         </div>
         <button
