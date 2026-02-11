@@ -150,9 +150,79 @@ export default function SettingsPage() {
         })}
       </div>
 
+      <div style={{ marginTop: 48, borderTop: "1px solid var(--border)", paddingTop: 32 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20 }}>
+          一括検索君の機能一覧
+        </h2>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <FeatureSection
+            title="横断検索"
+            description="Slack・Gmail・Dropbox・Google Drive の4サービスを同時に検索します。キーワードを入力するだけで、全サービスの結果を一覧表示します。"
+            isMobile={isMobile}
+          />
+          <FeatureSection
+            title="ファイル形式バッジ"
+            description="Dropbox・Google Drive の検索結果にファイル形式が色付きバッジで表示されます。PDF（赤）・Word（青）・Excel（緑）・PowerPoint（オレンジ）・フォルダ・画像・動画・音声・ZIP などが一目でわかります。"
+            isMobile={isMobile}
+          />
+          <FeatureSection
+            title="フォルダパス・ファイルサイズ表示"
+            description="検索結果のカードにファイルが保存されているフォルダのパスとファイルサイズが表示されます。どのフォルダにあるファイルかをすぐに確認できます。"
+            isMobile={isMobile}
+          />
+          <FeatureSection
+            title="API 詳細情報（メタデータ）"
+            description="各検索結果の詳細ページで、API から取得した全てのメタデータを確認できます。ファイルのハッシュ値、リビジョン、共有情報など、元サービスの生データがそのまま表示されます。"
+            isMobile={isMobile}
+          />
+          <FeatureSection
+            title="検索フィルター"
+            description="ファイル種別（PDF / Word / Excel / PowerPoint / フォルダ / 画像 / 動画 / 音声 / 圧縮ファイル / テキスト）で絞り込み検索ができます。日付範囲での絞り込みも可能です。"
+            isMobile={isMobile}
+          />
+          <FeatureSection
+            title="全件取得（ページネーション）"
+            description="Dropbox・Google Drive の検索結果はページネーションで全件取得します。以前の20件制限は解除されました。"
+            isMobile={isMobile}
+          />
+          <FeatureSection
+            title="検索キーワードハイライト"
+            description="検索結果のタイトルとスニペット内の検索キーワードが黄色でハイライト表示されます。目的の情報を素早く見つけられます。"
+            isMobile={isMobile}
+          />
+          <FeatureSection
+            title="検索履歴"
+            description="過去の検索キーワードが自動保存され、検索ボックスをクリックすると履歴から再検索できます。履歴の個別削除・一括削除も可能です。"
+            isMobile={isMobile}
+          />
+          <FeatureSection
+            title="モバイル対応"
+            description="スマートフォン・タブレットでも快適に使えるレスポンシブデザインです。全ページがモバイルに最適化されています。"
+            isMobile={isMobile}
+          />
+        </div>
+      </div>
+
       <p style={{ marginTop: 24, fontSize: 12, color: "var(--text-secondary)", textAlign: "center" }}>
         ※ 各サービスの OAuth 認証情報は SEC-01 に基づき環境変数で管理されています
       </p>
+    </div>
+  );
+}
+
+function FeatureSection({ title, description, isMobile }: { title: string; description: string; isMobile: boolean }) {
+  return (
+    <div
+      style={{
+        padding: isMobile ? 16 : "16px 20px",
+        border: "1px solid var(--border)",
+        borderRadius: 10,
+        background: "var(--bg)",
+      }}
+    >
+      <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 6, color: "var(--text)" }}>{title}</h3>
+      <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.7, margin: 0 }}>{description}</p>
     </div>
   );
 }
