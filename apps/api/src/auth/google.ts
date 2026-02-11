@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type { ServiceId } from "../types/index.js";
 import { setToken, removeToken } from "../store/tokens.js";
+import { clearTokenBackup } from "../store/token-backup.js";
 
 const router = Router();
 
@@ -160,6 +161,7 @@ makeServiceAuthHandler("gmail", SCOPES.gmail);
 makeServiceAuthHandler("drive", SCOPES.drive);
 
 router.post("/logout", (req, res) => {
+  clearTokenBackup(res);
   req.session.destroy(() => {
     res.json({ ok: true });
   });
