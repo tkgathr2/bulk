@@ -2,7 +2,7 @@ export type ServiceId = "slack" | "gmail" | "dropbox" | "drive";
 
 export type ServiceStatus = "success" | "error" | "loading" | "partial";
 
-export type FileType = "document" | "spreadsheet" | "presentation" | "pdf" | "image" | "other";
+export type FileType = "document" | "spreadsheet" | "presentation" | "pdf" | "image" | "folder" | "video" | "audio" | "archive" | "text" | "other";
 
 export type ErrorCode =
   | "auth_required"
@@ -38,6 +38,7 @@ export interface ResultItem {
   path?: string;
   mime_type?: string;
   file_size?: number | null;
+  raw_metadata?: Record<string, unknown>;
 }
 
 export interface ServiceResult {

@@ -55,7 +55,22 @@ export default function DetailPage() {
   if (item.subject) metaEntries.push(["subject", item.subject]);
   if (item.path) metaEntries.push(["path", item.path]);
   if (item.mime_type) metaEntries.push(["mime_type", item.mime_type]);
-  if (item.file_size != null) metaEntries.push(["file_size", `${(item.file_size / 1024).toFixed(0)} KB`]);
+  if (item.file_size != null) {
+    const kb = item.file_size / 1024;
+    metaEntries.push(["file_size", kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb.toFixed(0)} KB`]);
+  }
+
+  const rawEntries: [string, string][] = [];
+  if (item.raw_metadata) {
+    for (const [key, value] of Object.entries(item.raw_metadata)) {
+      if (value == null || value === "") continue;
+      if (typeof value === "object") {
+        rawEntries.push([key, JSON.stringify(value)]);
+      } else {
+        rawEntries.push([key, String(value)]);
+      }
+    }
+  }
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: isMobile ? 16 : 32 }}>
@@ -163,6 +178,38 @@ export default function DetailPage() {
         >
           元サービスで開く
         </a>
+
+        {rawEntries.length > 0 && (
+          <div style={{ marginTop: 32 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: "var(--text-secondary)" }}>
+              API 詳細情報
+            </h3>
+            <div
+              style={{
+                background: "var(--bg-secondary)",
+                borderRadius: 8,
+                padding: isMobile ? 12 : 20,
+                border: "1px solid var(--border)",
+              }}
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : "160px 1fr",
+                  gap: "8px 16px",
+                  fontSize: 13,
+                }}
+              >
+                {rawEntries.map(([key, value]) => (
+                  <div key={key} style={{ display: "contents" }}>
+                    <span style={{ color: "var(--text-secondary)", fontWeight: 500, fontFamily: "monospace", fontSize: 12 }}>{key}</span>
+                    <span style={{ wordBreak: "break-all" }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 import type { ResultItem, ServiceResult, SearchRequest } from "../types/index.js";
 
 const DROPBOX_SEARCH_URL = "https://api.dropboxapi.com/2/files/search_v2";
+const DROPBOX_CONTINUE_URL = "https://api.dropboxapi.com/2/files/search/continue_v2";
+const MAX_RESULTS = 100;
 
 const CATEGORY_MAP: Record<string, string> = {
   document: "document",
@@ -8,7 +10,58 @@ const CATEGORY_MAP: Record<string, string> = {
   presentation: "presentation",
   pdf: "pdf",
   image: "image",
+  video: "video",
+  audio: "audio",
+  folder: "folder",
 };
+
+function detectMimeType(name: string): string | undefined {
+  const ext = name.split(".").pop()?.toLowerCase();
+  if (!ext) return undefined;
+  const map: Record<string, string> = {
+    pdf: "application/pdf",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    doc: "application/msword",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    xls: "application/vnd.ms-excel",
+    pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ppt: "application/vnd.ms-powerpoint",
+    csv: "text/csv",
+    txt: "text/plain",
+    zip: "application/zip",
+    rar: "application/x-rar-compressed",
+    mp4: "video/mp4",
+    mov: "video/quicktime",
+    avi: "video/x-msvideo",
+    mp3: "audio/mpeg",
+    wav: "audio/wav",
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    gif: "image/gif",
+    svg: "image/svg+xml",
+    bmp: "image/bmp",
+  };
+  return map[ext];
+}
+
+function fileTypeLabel(name: string, tag?: string): string {
+  if (tag === "folder") return "フォルダ";
+  const ext = name.split(".").pop()?.toLowerCase();
+  if (!ext) return "ファイル";
+  const labels: Record<string, string> = {
+    pdf: "PDF",
+    docx: "Word", doc: "Word",
+    xlsx: "Excel", xls: "Excel",
+    pptx: "PowerPoint", ppt: "PowerPoint",
+    csv: "CSV", txt: "テキスト",
+    zip: "ZIP", rar: "RAR",
+    mp4: "動画", mov: "動画", avi: "動画",
+    mp3: "音声", wav: "音声",
+    png: "画像", jpg: "画像", jpeg: "画像", gif: "画像", svg: "画像", bmp: "画像",
+  };
+  return labels[ext] ?? ext.toUpperCase();
+}
 
 export async function searchDropbox(
   accessToken: string,
@@ -16,7 +69,7 @@ export async function searchDropbox(
 ): Promise<ServiceResult> {
   try {
     const options: Record<string, unknown> = {
-      max_results: request.limit ?? 20,
+      max_results: MAX_RESULTS,
       file_status: { ".tag": "active" },
       filename_only: false,
     };
@@ -32,7 +85,7 @@ export async function searchDropbox(
       query: request.query,
       options,
       match_field_options: {
-        include_highlights: false,
+        include_highlights: true,
       },
     };
 
@@ -78,44 +131,85 @@ export async function searchDropbox(
       };
     }
 
-    const data = await res.json() as Record<string, unknown>;
-    const matches = (data.matches as Array<Record<string, unknown>>) ?? [];
-    const hasMore = data.has_more as boolean;
+    let allMatches: Array<Record<string, unknown>> = [];
+    let data = await res.json() as Record<string, unknown>;
+    allMatches.push(...((data.matches as Array<Record<string, unknown>>) ?? []));
 
-    const mapped = matches
+    while (data.has_more && data.cursor) {
+      const contRes = await fetch(DROPBOX_CONTINUE_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ cursor: data.cursor }),
+      });
+      if (!contRes.ok) break;
+      data = await contRes.json() as Record<string, unknown>;
+      allMatches.push(...((data.matches as Array<Record<string, unknown>>) ?? []));
+    }
+
+    const mapped = allMatches
       .map((m): ResultItem | null => {
-        const metadata = (m.metadata as Record<string, unknown>)?.metadata as Record<string, unknown> | undefined;
+        const metadataWrapper = m.metadata as Record<string, unknown> | undefined;
+        const metadata = metadataWrapper?.metadata as Record<string, unknown> | undefined;
         if (!metadata) return null;
 
+        const tag = (metadata[".tag"] as string) ?? "file";
         const name = (metadata.name as string) ?? "Untitled";
         const pathDisplay = (metadata.path_display as string) ?? "";
         const serverModified = (metadata.server_modified as string) ?? null;
+        const clientModified = (metadata.client_modified as string) ?? null;
         const size = metadata.size as number | undefined;
         const id = (metadata.id as string) ?? `dbx-${Date.now()}`;
+        const rev = (metadata.rev as string) ?? null;
+        const contentHash = (metadata.content_hash as string) ?? null;
+        const isDownloadable = metadata.is_downloadable as boolean | undefined;
+        const sharingInfo = metadata.sharing_info as Record<string, unknown> | undefined;
 
-        let mimeType: string | undefined;
-        if (name.endsWith(".pdf")) mimeType = "application/pdf";
-        else if (name.endsWith(".docx")) mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-        else if (name.endsWith(".xlsx")) mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-        else if (name.endsWith(".pptx")) mimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-        else if (name.match(/\.(png|jpg|jpeg|gif|bmp|svg)$/i)) mimeType = `image/${name.split(".").pop()?.toLowerCase()}`;
+        const mimeType = detectMimeType(name);
+        const typeLabel = fileTypeLabel(name, tag);
+
+        const highlightResult = m.highlight_result as Record<string, unknown> | undefined;
+        let snippet: string | null = null;
+        if (highlightResult) {
+          const spans = highlightResult.filename as Array<Record<string, unknown>> | undefined;
+          if (!spans) {
+            const content = highlightResult.file_content as Record<string, unknown> | undefined;
+            const contentSpans = content?.spans as Array<Record<string, unknown>> | undefined;
+            if (contentSpans) {
+              snippet = contentSpans.map((s) => (s.text as string) ?? "").join("");
+            }
+          }
+        }
 
         const pathParts = pathDisplay.split("/");
         pathParts.pop();
-        const folder = pathParts.join("/") + "/";
+        const folder = pathParts.join("/") || "/";
 
         return {
           id: `dbx-${id}`,
           service: "dropbox" as const,
           title: name,
-          snippet: null,
+          snippet: snippet ?? `${typeLabel} — ${folder}`,
           updated_at: serverModified,
           author: null,
           url: `https://www.dropbox.com/preview${pathDisplay}`,
-          kind: "file" as const,
+          kind: tag === "folder" ? "file" as const : "file" as const,
           path: folder,
           mime_type: mimeType,
           file_size: size ?? null,
+          raw_metadata: {
+            tag,
+            type_label: typeLabel,
+            path_display: pathDisplay,
+            server_modified: serverModified,
+            client_modified: clientModified,
+            rev,
+            content_hash: contentHash,
+            is_downloadable: isDownloadable,
+            sharing_info: sharingInfo,
+          },
         };
       });
     const items: ResultItem[] = mapped.filter((item): item is ResultItem => item !== null);
@@ -123,7 +217,7 @@ export async function searchDropbox(
     const filteredItems = applyLocalFilters(items, request);
 
     return {
-      status: hasMore ? "partial" : "success",
+      status: "success",
       total: filteredItems.length,
       items: filteredItems,
       error_code: null,

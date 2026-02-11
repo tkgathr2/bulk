@@ -12,11 +12,16 @@ const serviceOptions: { id: ServiceId; label: string; color: string }[] = [
 ];
 
 const fileTypeOptions: { value: FileType; label: string }[] = [
-  { value: "document", label: "ドキュメント" },
-  { value: "spreadsheet", label: "スプレッドシート" },
-  { value: "presentation", label: "スライド" },
   { value: "pdf", label: "PDF" },
+  { value: "document", label: "ドキュメント (Word)" },
+  { value: "spreadsheet", label: "スプレッドシート (Excel)" },
+  { value: "presentation", label: "スライド (PowerPoint)" },
+  { value: "folder", label: "フォルダ" },
   { value: "image", label: "画像" },
+  { value: "video", label: "動画" },
+  { value: "audio", label: "音声" },
+  { value: "archive", label: "圧縮ファイル (ZIP等)" },
+  { value: "text", label: "テキスト (TXT/CSV)" },
   { value: "other", label: "その他" },
 ];
 

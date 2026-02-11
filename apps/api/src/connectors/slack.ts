@@ -68,17 +68,27 @@ export async function searchSlack(
     const matches = (messages?.matches as Array<Record<string, unknown>>) ?? [];
     const total = (messages?.total as number) ?? 0;
 
-    const items: ResultItem[] = matches.map((m, idx) => ({
-      id: `slack-${(m.ts as string) ?? idx}`,
-      service: "slack" as const,
-      title: `#${(m.channel as Record<string, unknown>)?.name ?? "unknown"}`,
-      snippet: (m.text as string) ?? null,
-      updated_at: m.ts ? new Date(Number(m.ts) * 1000).toISOString() : null,
-      author: (m.username as string) ?? (m.user as string) ?? null,
-      url: (m.permalink as string) ?? "",
-      kind: "message" as const,
-      channel_name: ((m.channel as Record<string, unknown>)?.name as string) ?? undefined,
-    }));
+    const items: ResultItem[] = matches.map((m, idx) => {
+      const channel = m.channel as Record<string, unknown> | undefined;
+      return {
+        id: `slack-${(m.ts as string) ?? idx}`,
+        service: "slack" as const,
+        title: `#${channel?.name ?? "unknown"}`,
+        snippet: (m.text as string) ?? null,
+        updated_at: m.ts ? new Date(Number(m.ts) * 1000).toISOString() : null,
+        author: (m.username as string) ?? (m.user as string) ?? null,
+        url: (m.permalink as string) ?? "",
+        kind: "message" as const,
+        channel_name: (channel?.name as string) ?? undefined,
+        raw_metadata: {
+          type: (m.type as string) ?? null,
+          ts: (m.ts as string) ?? null,
+          team: (m.team as string) ?? null,
+          channel_id: (channel?.id as string) ?? null,
+          channel_name: (channel?.name as string) ?? null,
+        },
+      };
+    });
 
     const filteredItems = applyLocalFilters(items, request);
 
