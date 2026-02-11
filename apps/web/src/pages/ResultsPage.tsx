@@ -4,6 +4,40 @@ import type { ResultItem, ServiceResult, SearchResponse, SortOrder, ServiceId, F
 import { searchApi, saveSearchHistory } from "../api/client";
 import { useIsMobile } from "../hooks/useIsMobile";
 
+const NOTICE_KEY = "bulk_results_notice_v1";
+const NOTICE_TEXT = "Dropbox・Google Driveの検索結果にファイル形式バッジとフォルダパスが表示されるようになりました。詳細ページでは API の全情報を確認できます。";
+
+function ResultsNoticeBanner() {
+  const [dismissed, setDismissed] = useState(() => localStorage.getItem(NOTICE_KEY) === "1");
+  if (dismissed) return null;
+  return (
+    <div
+      style={{
+        padding: "10px 16px",
+        marginBottom: 8,
+        borderRadius: 8,
+        background: "linear-gradient(135deg, #1a73e808 0%, #fbbc0410 100%)",
+        border: "1px solid var(--primary)",
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        fontSize: 13,
+        color: "var(--text)",
+        position: "relative",
+      }}
+    >
+      <span style={{ fontSize: 18, flexShrink: 0 }}>&#x1F4E2;</span>
+      <span style={{ flex: 1, lineHeight: 1.5 }}>{NOTICE_TEXT}</span>
+      <button
+        onClick={() => { localStorage.setItem(NOTICE_KEY, "1"); setDismissed(true); }}
+        style={{ border: "none", background: "transparent", fontSize: 16, color: "var(--text-secondary)", cursor: "pointer", padding: "0 4px", flexShrink: 0 }}
+      >
+        &times;
+      </button>
+    </div>
+  );
+}
+
 const SNIPPET_MAX = 200;
 
 function truncateSnippet(text: string | null, max: number = SNIPPET_MAX): string {
@@ -506,6 +540,7 @@ export default function ResultsPage() {
                   ))}
                 </div>
               )}
+              <ResultsNoticeBanner />
               {visibleItems.length === 0 ? (
                 <p style={{ padding: 24, color: "var(--text-secondary)", textAlign: "center" }}>
                   検索結果は 0 件です
