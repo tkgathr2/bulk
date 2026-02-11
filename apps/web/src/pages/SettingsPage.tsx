@@ -76,9 +76,11 @@ export default function SettingsPage() {
               key={svc.id}
               style={{
                 display: "flex",
-                alignItems: "center",
+                alignItems: isMobile ? "flex-start" : "center",
                 justifyContent: "space-between",
-                padding: "20px 24px",
+                flexDirection: isMobile ? "column" : "row",
+                gap: isMobile ? 12 : 0,
+                padding: isMobile ? 16 : "20px 24px",
                 border: "1px solid var(--border)",
                 borderRadius: 12,
                 background: "var(--bg)",
