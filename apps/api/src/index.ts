@@ -70,7 +70,10 @@ app.use("/services", servicesRouter);
 if (IS_PROD) {
   const staticDir = path.resolve(__dirname, "../../web/dist");
   app.use(express.static(staticDir));
-  app.get("*", (_req, res) => {
+  app.get("*", (req, res) => {
+    if (req.path.startsWith("/assets/")) {
+      return res.status(404).end();
+    }
     res.sendFile(path.join(staticDir, "index.html"));
   });
 }
