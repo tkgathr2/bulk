@@ -450,7 +450,7 @@ export default function ResultsPage() {
                         >
                           {retrying === id ? "再試行中..." : "再試行"}
                         </button>
-                      )
+                      )}
                     </div>
                   ))}
                 </div>
