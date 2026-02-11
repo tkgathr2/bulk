@@ -63,23 +63,30 @@ export function tokenBackupMiddleware(req: Request, res: Response, next: NextFun
 
   const origEnd = res.end.bind(res);
   res.end = function patchedEnd(...args: Parameters<typeof origEnd>) {
-    if (req.session.tokens && Object.keys(req.session.tokens).length > 0) {
-      const encrypted = encrypt(JSON.stringify(req.session.tokens));
-      res.cookie(COOKIE_NAME, encrypted, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 365 * 24 * 60 * 60 * 1000,
-        sameSite: "lax",
-      });
+    if (res.headersSent) {
+      return origEnd(...args);
     }
-    if (req.session.user) {
-      const encrypted = encrypt(JSON.stringify(req.session.user));
-      res.cookie("user_backup", encrypted, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 365 * 24 * 60 * 60 * 1000,
-        sameSite: "lax",
-      });
+    try {
+      if (req.session.tokens && Object.keys(req.session.tokens).length > 0) {
+        const encrypted = encrypt(JSON.stringify(req.session.tokens));
+        res.cookie(COOKIE_NAME, encrypted, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          maxAge: 365 * 24 * 60 * 60 * 1000,
+          sameSite: "lax",
+        });
+      }
+      if (req.session.user) {
+        const encrypted = encrypt(JSON.stringify(req.session.user));
+        res.cookie("user_backup", encrypted, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          maxAge: 365 * 24 * 60 * 60 * 1000,
+          sameSite: "lax",
+        });
+      }
+    } catch {
+      console.warn(`token-backup cookie skipped: ${req.path}`);
     }
     return origEnd(...args);
   } as typeof origEnd;
