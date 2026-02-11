@@ -79,8 +79,12 @@ router.get("/callback", async (req, res) => {
       token_type: "Bearer",
     });
 
-    res.redirect(`${cfg.webBase}/settings?connected=dropbox`);
-  } catch {
+    req.session.save((err) => {
+      if (err) console.error("[auth] session save error (dropbox):", err);
+      res.redirect(`${cfg.webBase}/settings?connected=dropbox`);
+    });
+  } catch (err) {
+    console.error("[auth] dropbox callback error:", err);
     res.redirect(`${cfg.webBase}/settings?error=auth_failed&service=dropbox`);
   }
 });
