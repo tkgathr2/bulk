@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../api/client";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 const navItems = [
   { to: "/search", label: "検索" },
@@ -9,6 +10,7 @@ const navItems = [
 
 export default function Layout() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleLogout = async () => {
     await logout();
@@ -22,33 +24,35 @@ export default function Layout() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "12px 24px",
+          padding: isMobile ? "8px 12px" : "12px 24px",
           borderBottom: "1px solid var(--border)",
           background: "var(--bg)",
+          gap: 8,
         }}
       >
         <div
-          style={{ display: "flex", alignItems: "center", gap: 16, cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", flexShrink: 0 }}
           onClick={() => navigate("/search")}
         >
-          <span style={{ fontSize: 24, fontWeight: 600, color: "var(--primary)" }}>
+          <span style={{ fontSize: isMobile ? 16 : 24, fontWeight: 600, color: "var(--primary)" }}>
             一括検索君
           </span>
         </div>
-        <nav style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <nav style={{ display: "flex", alignItems: "center", gap: isMobile ? 2 : 8, flexWrap: "nowrap", overflow: "auto" }}>
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               style={({ isActive }) => ({
-                padding: "8px 16px",
+                padding: isMobile ? "6px 10px" : "8px 16px",
                 borderRadius: 20,
-                fontSize: 14,
+                fontSize: isMobile ? 12 : 14,
                 fontWeight: 500,
                 background: isActive ? "var(--primary)" : "transparent",
                 color: isActive ? "#fff" : "var(--text-secondary)",
                 border: "none",
                 textDecoration: "none",
+                whiteSpace: "nowrap",
               })}
             >
               {item.label}
@@ -57,15 +61,16 @@ export default function Layout() {
           <button
             onClick={handleLogout}
             style={{
-              padding: "8px 16px",
+              padding: isMobile ? "6px 10px" : "8px 16px",
               borderRadius: 20,
-              fontSize: 14,
+              fontSize: isMobile ? 12 : 14,
               fontWeight: 500,
               background: "transparent",
               color: "var(--text-secondary)",
               border: "none",
               cursor: "pointer",
-              marginLeft: 8,
+              marginLeft: isMobile ? 2 : 8,
+              whiteSpace: "nowrap",
             }}
           >
             ログアウト

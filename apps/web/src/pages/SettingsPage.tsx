@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { ServiceConnectionInfo } from "../types/index";
 import { getServicesStatus, disconnectService, getServiceAuthUrl } from "../api/client";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 const serviceIcons: Record<string, string> = {
   slack: "S",
@@ -23,6 +24,7 @@ const statusLabels: Record<string, { label: string; color: string; bg: string }>
 };
 
 export default function SettingsPage() {
+  const isMobile = useIsMobile();
   const [services, setServices] = useState<ServiceConnectionInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -59,7 +61,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div style={{ maxWidth: 700, margin: "0 auto", padding: 32 }}>
+    <div style={{ maxWidth: 700, margin: "0 auto", padding: isMobile ? 16 : 32 }}>
       <h2 style={{ fontSize: 22, fontWeight: 500, marginBottom: 8 }}>サービス連携設定</h2>
       <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 32 }}>
         検索対象サービスの接続状態を管理します
@@ -105,7 +107,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, ...(isMobile ? { width: "100%", justifyContent: "flex-end" } : {}) }}>
                 <span
                   style={{
                     padding: "4px 12px",

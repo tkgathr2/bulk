@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 const steps = [
   {
@@ -33,9 +34,10 @@ const serviceInfo = [
 
 export default function GuidePage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto", padding: 32 }}>
+    <div style={{ maxWidth: 720, margin: "0 auto", padding: isMobile ? 16 : 32 }}>
       <h2 style={{ fontSize: 24, fontWeight: 500, marginBottom: 8, color: "var(--primary)" }}>
         一括検索君の使い方
       </h2>
@@ -84,7 +86,7 @@ export default function GuidePage() {
       </div>
 
       <h3 style={{ fontSize: 18, fontWeight: 500, marginBottom: 16 }}>対応サービス</h3>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 40 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12, marginBottom: 40 }}>
         {serviceInfo.map((svc) => (
           <div
             key={svc.name}
@@ -101,7 +103,7 @@ export default function GuidePage() {
         ))}
       </div>
 
-      <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+      <div style={{ display: "flex", gap: 12, justifyContent: "center", flexDirection: isMobile ? "column" : "row", alignItems: "center" }}>
         <button
           onClick={() => navigate("/settings")}
           style={{

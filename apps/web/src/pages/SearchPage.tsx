@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import type { ServiceId, FileType, SearchHistoryEntry } from "../types/index";
 import { getSearchHistory, deleteSearchHistoryItem, deleteAllSearchHistory } from "../api/client";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 const serviceOptions: { id: ServiceId; label: string; color: string }[] = [
   { id: "slack", label: "Slack", color: "#4A154B" },
@@ -93,6 +94,7 @@ function NoticeBanner() {
 
 export default function SearchPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [services, setServices] = useState<ServiceId[]>(() => {
@@ -176,17 +178,17 @@ export default function SearchPage() {
         alignItems: "center",
         justifyContent: "center",
         minHeight: "calc(100vh - 60px)",
-        padding: 24,
+        padding: isMobile ? 16 : 24,
       }}
     >
       <NoticeBanner />
 
       <h2
         style={{
-          fontSize: 32,
+          fontSize: isMobile ? 22 : 32,
           fontWeight: 400,
           color: "var(--text)",
-          marginBottom: 32,
+          marginBottom: isMobile ? 20 : 32,
         }}
       >
         何を探しますか？
