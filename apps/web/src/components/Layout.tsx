@@ -35,7 +35,7 @@ export default function Layout() {
           onClick={() => navigate("/search")}
         >
           <span style={{ fontSize: isMobile ? 16 : 24, fontWeight: 600, color: "var(--primary)" }}>
-            一括検索君
+            一括検索君 Ver1.0
           </span>
         </div>
         <nav style={{ display: "flex", alignItems: "center", gap: isMobile ? 2 : 8, flexWrap: "nowrap", overflow: "auto" }}>
