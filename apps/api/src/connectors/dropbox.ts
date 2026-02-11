@@ -15,20 +15,26 @@ export async function searchDropbox(
   request: SearchRequest
 ): Promise<ServiceResult> {
   try {
-    const body: Record<string, unknown> = {
-      query: request.query,
-      options: {
-        max_results: request.limit ?? 20,
-        file_status: { ".tag": "active" },
-      },
+    const options: Record<string, unknown> = {
+      max_results: request.limit ?? 20,
+      file_status: { ".tag": "active" },
+      filename_only: false,
     };
 
     if (request.file_type && request.file_type !== "other") {
       const cat = CATEGORY_MAP[request.file_type];
       if (cat) {
-        (body.options as Record<string, unknown>).file_categories = [{ ".tag": cat }];
+        options.file_categories = [{ ".tag": cat }];
       }
     }
+
+    const body: Record<string, unknown> = {
+      query: request.query,
+      options,
+      match_field_options: {
+        include_highlights: false,
+      },
+    };
 
     const res = await fetch(DROPBOX_SEARCH_URL, {
       method: "POST",
@@ -77,10 +83,6 @@ export async function searchDropbox(
     const hasMore = data.has_more as boolean;
 
     const mapped = matches
-      .filter((m) => {
-        const matchType = (m.match_type as Record<string, unknown>)?.[".tag"];
-        return matchType === "filename" || matchType === "content" || matchType === "both";
-      })
       .map((m): ResultItem | null => {
         const metadata = (m.metadata as Record<string, unknown>)?.metadata as Record<string, unknown> | undefined;
         if (!metadata) return null;

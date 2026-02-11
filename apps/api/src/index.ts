@@ -1,12 +1,16 @@
 import "dotenv/config";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 import express from "express";
 import cors from "cors";
 import session from "express-session";
+import FileStoreFactory from "session-file-store";
 import searchRouter from "./routes/search.js";
 import servicesRouter from "./routes/services.js";
 import authRouter from "./auth/index.js";
+
+const FileStore = FileStoreFactory(session);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -27,15 +31,24 @@ app.use(
 );
 app.use(express.json());
 
+const SESSION_DIR = process.env.SESSION_STORE_PATH ?? path.resolve(__dirname, "../../.sessions");
+fs.mkdirSync(SESSION_DIR, { recursive: true });
+
 app.use(
   session({
+    store: new FileStore({
+      path: SESSION_DIR,
+      ttl: 30 * 24 * 60 * 60,
+      retries: 1,
+      logFn: () => {},
+    }),
     secret: process.env.SESSION_SECRET ?? "dev-session-secret-change-me",
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: IS_PROD,
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
       sameSite: "lax",
     },
   })
