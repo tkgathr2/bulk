@@ -62,6 +62,7 @@ export default function LoginPage() {
           }}
         >
           一括検索君
+          <span style={{ fontSize: 14, fontWeight: 400, color: "var(--text-secondary)", display: "block", marginTop: 4 }}>Ver2.0</span>
         </h1>
         <p
           style={{

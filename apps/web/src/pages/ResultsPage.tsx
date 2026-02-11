@@ -180,22 +180,56 @@ export default function ResultsPage() {
     setLoading(true);
     setError(null);
     setVisibleCount(PAGE_SIZE);
-    try {
-      const result = await searchApi({
-        query,
-        services: requestedServices,
-        date_from: dateFrom,
-        date_to: dateTo,
-        file_type: (fileTypeParam as FileType) ?? null,
-      });
-      setSearchResult(result);
-      await saveSearchHistory(query, result.filters).catch(() => {});
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Search failed");
-    } finally {
-      setLoading(false);
-      searchInFlight.current = false;
-    }
+
+    const filters: SearchResponse["filters"] = {
+      services: requestedServices,
+      date_from: dateFrom ?? null,
+      date_to: dateTo ?? null,
+      file_type: (fileTypeParam as FileType) ?? null,
+    };
+
+    const base: SearchResponse = {
+      job_id: "job_" + Date.now(),
+      requested_at: new Date().toISOString(),
+      query,
+      filters,
+      services: Object.fromEntries(
+        requestedServices.map((s) => [s, { status: "loading" as const, total: null, items: [], error_code: null, error_message: null }])
+      ),
+    };
+    setSearchResult(base);
+    setLoading(false);
+
+    const promises = requestedServices.map(async (svcId) => {
+      try {
+        const result = await searchApi({
+          query,
+          services: [svcId],
+          date_from: dateFrom,
+          date_to: dateTo,
+          file_type: (fileTypeParam as FileType) ?? null,
+        });
+        setSearchResult((prev) => {
+          if (!prev) return result;
+          return { ...prev, services: { ...prev.services, [svcId]: result.services[svcId] } };
+        });
+      } catch {
+        setSearchResult((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            services: {
+              ...prev.services,
+              [svcId]: { status: "error", total: null, items: [], error_code: "network_error", error_message: "検索中にエラーが発生しました。" },
+            },
+          };
+        });
+      }
+    });
+
+    await Promise.all(promises);
+    searchInFlight.current = false;
+    saveSearchHistory(query, filters).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, servicesParam, dateFrom, dateTo, fileTypeParam]);
 
@@ -271,6 +305,7 @@ export default function ResultsPage() {
     return { text: String(svc.total ?? 0), isError: false };
   };
 
+  const someLoading = searchResult ? Object.values(searchResult.services).some((s) => s.status === "loading") : false;
   const allItems = getAllItems();
   const visibleItems = allItems.slice(0, visibleCount);
   const hasMore = visibleCount < allItems.length;
@@ -541,11 +576,16 @@ export default function ResultsPage() {
                 </div>
               )}
               <ResultsNoticeBanner />
-              {visibleItems.length === 0 ? (
+              {someLoading && (
+                <div style={{ padding: 12, textAlign: "center", fontSize: 13, color: "var(--text-secondary)" }}>
+                  他のサービスを検索中...
+                </div>
+              )}
+              {visibleItems.length === 0 && !someLoading ? (
                 <p style={{ padding: 24, color: "var(--text-secondary)", textAlign: "center" }}>
                   検索結果は 0 件です
                 </p>
-              ) : (
+              ) : visibleItems.length > 0 && (
                 <>
                   {visibleItems.map((item) => (
               <div
