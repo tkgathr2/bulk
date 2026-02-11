@@ -3,6 +3,31 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import type { ResultItem, ServiceResult, SearchResponse, SortOrder, ServiceId, FileType } from "../types/index";
 import { searchApi, saveSearchHistory } from "../api/client";
 
+const SNIPPET_MAX = 200;
+
+function truncateSnippet(text: string | null, max: number = SNIPPET_MAX): string {
+  if (!text) return "";
+  if (text.length <= max) return text;
+  return text.slice(0, max) + "...";
+}
+
+function HighlightText({ text, keyword }: { text: string; keyword: string }) {
+  if (!keyword || !text) return <>{text}</>;
+  const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const parts = text.split(new RegExp(`(${escaped})`, "gi"));
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === keyword.toLowerCase() ? (
+          <mark key={i} style={{ background: "#fbbc04", color: "inherit", borderRadius: 2, padding: "0 1px" }}>{part}</mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
 const ALL_SERVICES: ServiceId[] = ["slack", "gmail", "dropbox", "drive"];
 const PAGE_SIZE = 20;
 
@@ -349,37 +374,37 @@ export default function ResultsPage() {
                   数分待ってから再試行してください。
                 </p>
               )}
-              {activeServiceResult.error_code === "auth_required" && (
+              {activeServiceResult.error_code === "auth_required" ? (
                 <button
                   onClick={() => navigate("/settings")}
                   style={{
-                    padding: "8px 20px",
-                    border: "1px solid var(--border)",
+                    padding: "8px 24px",
+                    border: "none",
                     borderRadius: 6,
-                    background: "var(--bg)",
-                    fontSize: 13,
-                    color: "var(--primary)",
-                    marginBottom: 12,
-                    marginRight: 8,
+                    background: "var(--primary)",
+                    color: "#fff",
+                    fontSize: 14,
+                    fontWeight: 500,
                   }}
                 >
-                  設定画面へ
+                  接続する
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleRetry(activeTab)}
+                  disabled={retrying === activeTab}
+                  style={{
+                    padding: "8px 24px",
+                    border: "none",
+                    borderRadius: 6,
+                    background: "var(--primary)",
+                    color: "#fff",
+                    fontSize: 14,
+                  }}
+                >
+                  {retrying === activeTab ? "再試行中..." : "再試行"}
                 </button>
               )}
-              <button
-                onClick={() => handleRetry(activeTab)}
-                disabled={retrying === activeTab}
-                style={{
-                  padding: "8px 24px",
-                  border: "none",
-                  borderRadius: 6,
-                  background: "var(--primary)",
-                  color: "#fff",
-                  fontSize: 14,
-                }}
-              >
-                {retrying === activeTab ? "再試行中..." : "再試行"}
-              </button>
             </div>
           ) : (
             <>
@@ -395,20 +420,37 @@ export default function ResultsPage() {
                           {errorMessages[result.error_code ?? "unknown_error"]}
                         </span>
                       </div>
-                      <button
-                        onClick={() => handleRetry(id)}
-                        disabled={retrying === id}
-                        style={{
-                          padding: "4px 12px",
-                          border: "none",
-                          borderRadius: 4,
-                          background: "var(--primary)",
-                          color: "#fff",
-                          fontSize: 12,
-                        }}
-                      >
-                        {retrying === id ? "再試行中..." : "再試行"}
-                      </button>
+                      {result.error_code === "auth_required" ? (
+                        <button
+                          onClick={() => navigate("/settings")}
+                          style={{
+                            padding: "4px 12px",
+                            border: "none",
+                            borderRadius: 4,
+                            background: "var(--primary)",
+                            color: "#fff",
+                            fontSize: 12,
+                            fontWeight: 500,
+                          }}
+                        >
+                          接続する
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleRetry(id)}
+                          disabled={retrying === id}
+                          style={{
+                            padding: "4px 12px",
+                            border: "none",
+                            borderRadius: 4,
+                            background: "var(--primary)",
+                            color: "#fff",
+                            fontSize: 12,
+                          }}
+                        >
+                          {retrying === id ? "再試行中..." : "再試行"}
+                        </button>
+                      )
                     </div>
                   ))}
                 </div>
@@ -426,43 +468,52 @@ export default function ResultsPage() {
                 style={{
                   padding: "14px 16px",
                   borderRadius: 8,
-                  marginBottom: 4,
+                  marginBottom: 8,
                   cursor: "pointer",
-                  background: selectedItem?.id === item.id ? "var(--bg-secondary)" : "transparent",
-                  borderLeft: `3px solid ${serviceColors[item.service] ?? "var(--border)"}`,
+                  background: selectedItem?.id === item.id ? "var(--bg-secondary)" : "var(--bg)",
+                  borderLeft: `4px solid ${serviceColors[item.service] ?? "var(--border)"}`,
+                  border: `1px solid ${selectedItem?.id === item.id ? "var(--primary)" : "var(--border)"}`,
+                  borderLeftWidth: 4,
+                  borderLeftColor: serviceColors[item.service] ?? "var(--border)",
+                  transition: "box-shadow 0.15s",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                   <span
                     style={{
                       fontSize: 11,
-                      fontWeight: 600,
+                      fontWeight: 700,
                       color: serviceColors[item.service],
                       textTransform: "uppercase",
+                      letterSpacing: 0.5,
                     }}
                   >
                     {item.service}
                   </span>
-                  <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+                  <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>
                     {item.kind}
                   </span>
+                  {item.channel_name && (
+                    <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>#{item.channel_name}</span>
+                  )}
                 </div>
                 <h4
-                  style={{ fontSize: 15, fontWeight: 500, marginBottom: 4, cursor: "pointer" }}
+                  style={{ fontSize: 14, fontWeight: 600, marginBottom: 6, cursor: "pointer", lineHeight: 1.4 }}
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/detail/${item.id}`, { state: { item } });
                   }}
                 >
-                  {item.title}
+                  <HighlightText text={item.title} keyword={query} />
                 </h4>
                 {item.snippet && (
-                  <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                    {item.snippet}
+                  <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
+                    <HighlightText text={truncateSnippet(item.snippet)} keyword={query} />
                   </p>
                 )}
-                <div style={{ display: "flex", gap: 12, marginTop: 6, fontSize: 12, color: "var(--text-secondary)" }}>
+                <div style={{ display: "flex", gap: 12, marginTop: 8, fontSize: 12, color: "var(--text-secondary)" }}>
                   {item.author && <span>{item.author}</span>}
+                  {item.from && !item.author && <span>{item.from}</span>}
                   {item.updated_at && (
                     <span>{new Date(item.updated_at).toLocaleDateString("ja-JP")}</span>
                   )}
@@ -518,10 +569,12 @@ export default function ResultsPage() {
                 x
               </button>
             </div>
-            <h3 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>{selectedItem.title}</h3>
+            <h3 style={{ fontSize: 18, fontWeight: 500, marginBottom: 12 }}>
+              <HighlightText text={selectedItem.title} keyword={query} />
+            </h3>
             {selectedItem.snippet && (
               <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 16, lineHeight: 1.6 }}>
-                {selectedItem.snippet}
+                <HighlightText text={selectedItem.snippet} keyword={query} />
               </p>
             )}
             <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 20 }}>

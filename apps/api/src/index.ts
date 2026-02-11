@@ -4,11 +4,13 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import session from "express-session";
 import FileStoreFactory from "session-file-store";
 import searchRouter from "./routes/search.js";
 import servicesRouter from "./routes/services.js";
 import authRouter from "./auth/index.js";
+import { tokenBackupMiddleware } from "./store/token-backup.js";
 
 const FileStore = FileStoreFactory(session);
 
@@ -30,6 +32,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(cookieParser());
 
 const SESSION_DIR = process.env.SESSION_STORE_PATH ?? path.resolve(__dirname, "../../.sessions");
 fs.mkdirSync(SESSION_DIR, { recursive: true });
@@ -53,6 +56,8 @@ app.use(
     },
   })
 );
+
+app.use(tokenBackupMiddleware);
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
