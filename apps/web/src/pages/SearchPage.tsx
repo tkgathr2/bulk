@@ -37,59 +37,48 @@ function NoticeBanner() {
       style={{
         width: "100%",
         maxWidth: 680,
-        marginBottom: 24,
-        padding: "16px 20px",
-        borderRadius: 12,
-        border: "2px solid #E53935",
-        background: "linear-gradient(135deg, #E5393508 0%, #FF980015 100%)",
+        marginBottom: 20,
+        padding: "12px 16px",
+        borderRadius: 8,
+        border: "1px solid #E53935",
+        background: "#E5393506",
         position: "relative",
       }}
     >
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-        <span style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>&#x1F6A8;</span>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 16, color: "#E53935", marginBottom: 6 }}>
-            重要な更新
-          </div>
-          <ul style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.8, margin: 0, paddingLeft: 18 }}>
-            <li>Dropbox・Google Drive の検索結果に<strong>ファイル形式バッジ</strong>（PDF / Word / Excel 等）を追加</li>
-            <li>フォルダパス・ファイルサイズを結果カードに表示</li>
-            <li>詳細ページで <strong>API の全メタデータ</strong>を確認可能に</li>
-            <li>検索フィルターに<strong>フォルダ・動画・音声・圧縮ファイル・テキスト</strong>を追加</li>
-            <li>Dropbox・Google Drive の検索上限を<strong>20件→全件取得</strong>に拡張</li>
-          </ul>
-          <Link
-            to="/settings"
-            style={{
-              display: "inline-block",
-              marginTop: 10,
-              padding: "8px 20px",
-              borderRadius: 6,
-              background: "#E53935",
-              color: "#fff",
-              fontSize: 14,
-              fontWeight: 600,
-              textDecoration: "none",
-            }}
-          >
-            機能の詳細を見る
-          </Link>
-        </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: "#E53935", flexShrink: 0 }}>Ver2.0</span>
+        <span style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
+          ファイル形式バッジ・全件取得・高速検索に対応
+        </span>
+        <Link
+          to="/settings"
+          style={{
+            padding: "4px 12px",
+            borderRadius: 4,
+            background: "#E53935",
+            color: "#fff",
+            fontSize: 12,
+            fontWeight: 600,
+            textDecoration: "none",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}
+        >
+          詳細
+        </Link>
         <button
           onClick={() => {
             localStorage.setItem(NOTICE_DISMISSED_KEY, "1");
             setDismissed(true);
           }}
           style={{
-            position: "absolute",
-            top: 8,
-            right: 12,
             border: "none",
             background: "transparent",
-            fontSize: 20,
+            fontSize: 18,
             color: "var(--text-secondary)",
             cursor: "pointer",
-            padding: 4,
+            padding: "0 2px",
+            flexShrink: 0,
           }}
           title="閉じる"
         >
