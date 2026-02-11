@@ -85,6 +85,13 @@ export async function searchGmail(
           from,
           to,
           subject,
+          raw_metadata: {
+            message_id: (ref.id as string) ?? null,
+            thread_id: (ref.threadId as string) ?? null,
+            label_ids: (msg.labelIds as string[]) ?? [],
+            size_estimate: (msg.sizeEstimate as number) ?? null,
+            history_id: (msg.historyId as string) ?? null,
+          },
         };
       })
     );

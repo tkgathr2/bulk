@@ -12,6 +12,50 @@ function truncateSnippet(text: string | null, max: number = SNIPPET_MAX): string
   return text.slice(0, max) + "...";
 }
 
+function fileTypeIcon(item: ResultItem): string {
+  const label = (item.raw_metadata?.type_label as string) ?? "";
+  if (label.includes("PDF")) return "PDF";
+  if (label.includes("Word") || label.includes("ドキュメント")) return "DOC";
+  if (label.includes("Excel") || label.includes("スプレッドシート")) return "XLS";
+  if (label.includes("PowerPoint") || label.includes("スライド")) return "PPT";
+  if (label.includes("フォルダ")) return "DIR";
+  if (label.includes("画像")) return "IMG";
+  if (label.includes("動画")) return "VID";
+  if (label.includes("音声")) return "AUD";
+  if (label.includes("ZIP") || label.includes("RAR")) return "ZIP";
+  if (label.includes("CSV") || label.includes("テキスト")) return "TXT";
+  const mime = item.mime_type ?? "";
+  if (mime.includes("pdf")) return "PDF";
+  if (mime.includes("image")) return "IMG";
+  if (mime.includes("video")) return "VID";
+  if (mime.includes("audio")) return "AUD";
+  if (mime.includes("zip") || mime.includes("rar")) return "ZIP";
+  if (mime.includes("word") || mime.includes("document")) return "DOC";
+  if (mime.includes("sheet") || mime.includes("excel")) return "XLS";
+  if (mime.includes("presentation") || mime.includes("powerpoint")) return "PPT";
+  return "";
+}
+
+const fileTypeBadgeColors: Record<string, string> = {
+  PDF: "#E53935",
+  DOC: "#1565C0",
+  XLS: "#2E7D32",
+  PPT: "#E65100",
+  DIR: "#757575",
+  IMG: "#6A1B9A",
+  VID: "#AD1457",
+  AUD: "#00695C",
+  ZIP: "#4E342E",
+  TXT: "#546E7A",
+};
+
+function formatFileSize(bytes: number | null | undefined): string {
+  if (bytes == null) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function HighlightText({ text, keyword }: { text: string; keyword: string }) {
   if (!keyword || !text) return <>{text}</>;
   const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -485,7 +529,7 @@ export default function ResultsPage() {
                   transition: "box-shadow 0.15s",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
                   <span
                     style={{
                       fontSize: 11,
@@ -497,11 +541,32 @@ export default function ResultsPage() {
                   >
                     {item.service}
                   </span>
-                  <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>
-                    {item.kind}
-                  </span>
+                  {(item.service === "dropbox" || item.service === "drive") && fileTypeIcon(item) ? (
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: "#fff",
+                        background: fileTypeBadgeColors[fileTypeIcon(item)] ?? "#757575",
+                        padding: "1px 6px",
+                        borderRadius: 3,
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      {fileTypeIcon(item)}
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>
+                      {item.kind}
+                    </span>
+                  )}
                   {item.channel_name && (
                     <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>#{item.channel_name}</span>
+                  )}
+                  {item.path && (item.service === "dropbox" || item.service === "drive") && (
+                    <span style={{ fontSize: 11, color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 300 }}>
+                      {item.path}
+                    </span>
                   )}
                 </div>
                 <h4
@@ -518,11 +583,17 @@ export default function ResultsPage() {
                     <HighlightText text={truncateSnippet(item.snippet)} keyword={query} />
                   </p>
                 )}
-                <div style={{ display: "flex", gap: 12, marginTop: 8, fontSize: 12, color: "var(--text-secondary)" }}>
+                <div style={{ display: "flex", gap: 12, marginTop: 8, fontSize: 12, color: "var(--text-secondary)", flexWrap: "wrap" }}>
                   {item.author && <span>{item.author}</span>}
                   {item.from && !item.author && <span>{item.from}</span>}
                   {item.updated_at && (
                     <span>{new Date(item.updated_at).toLocaleDateString("ja-JP")}</span>
+                  )}
+                  {item.file_size != null && item.file_size > 0 && (
+                    <span>{formatFileSize(item.file_size)}</span>
+                  )}
+                  {typeof item.raw_metadata?.type_label === "string" && (
+                    <span>{item.raw_metadata.type_label}</span>
                   )}
                 </div>
               </div>
