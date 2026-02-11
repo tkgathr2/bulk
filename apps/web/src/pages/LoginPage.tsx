@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuthMe, getLoginUrl } from "../api/client";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -43,11 +45,12 @@ export default function LoginPage() {
         style={{
           background: "var(--bg)",
           borderRadius: 12,
-          padding: 48,
+          padding: isMobile ? 24 : 48,
           boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)",
           textAlign: "center",
           maxWidth: 400,
           width: "100%",
+          margin: isMobile ? "0 16px" : 0,
         }}
       >
         <h1

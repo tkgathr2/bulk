@@ -1,5 +1,6 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import type { ResultItem } from "../types/index";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 const serviceColors: Record<string, string> = {
   slack: "#4A154B",
@@ -20,6 +21,7 @@ const metaLabels: Record<string, string> = {
 export default function DetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const location = useLocation();
   const item = (location.state as { item?: ResultItem } | null)?.item;
 
@@ -56,7 +58,7 @@ export default function DetailPage() {
   if (item.file_size != null) metaEntries.push(["file_size", `${(item.file_size / 1024).toFixed(0)} KB`]);
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: 32 }}>
+    <div style={{ maxWidth: 800, margin: "0 auto", padding: isMobile ? 16 : 32 }}>
       <button
         onClick={() => navigate(-1)}
         style={{
@@ -78,7 +80,7 @@ export default function DetailPage() {
           background: "var(--bg)",
           border: "1px solid var(--border)",
           borderRadius: 12,
-          padding: 32,
+          padding: isMobile ? 16 : 32,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
@@ -119,7 +121,7 @@ export default function DetailPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "120px 1fr",
+            gridTemplateColumns: isMobile ? "1fr" : "120px 1fr",
             gap: "8px 16px",
             fontSize: 14,
             marginBottom: 24,

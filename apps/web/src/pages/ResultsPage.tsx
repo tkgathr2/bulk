@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import type { ResultItem, ServiceResult, SearchResponse, SortOrder, ServiceId, FileType } from "../types/index";
 import { searchApi, saveSearchHistory } from "../api/client";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 const SNIPPET_MAX = 200;
 
@@ -83,6 +84,7 @@ export default function ResultsPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedItem, setSelectedItem] = useState<ResultItem | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>("relevance");
+  const isMobile = useIsMobile();
   const [searchResult, setSearchResult] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -231,15 +233,15 @@ export default function ResultsPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 60px)" }}>
-      <div style={{ padding: "12px 24px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 16 }}>
+      <div style={{ padding: isMobile ? "8px 12px" : "12px 24px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: isMobile ? 8 : 16 }}>
         <div
           style={{
             display: "flex",
             flex: 1,
-            maxWidth: 580,
+            maxWidth: isMobile ? 9999 : 580,
             border: "1px solid var(--border)",
             borderRadius: 28,
-            padding: "4px 16px",
+            padding: isMobile ? "2px 12px" : "4px 16px",
             boxShadow: "0 1px 3px rgba(32,33,36,0.08)",
           }}
         >
@@ -268,6 +270,7 @@ export default function ResultsPage() {
             }}
           />
         </div>
+        {!isMobile && (
         <select
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value as SortOrder)}
@@ -284,14 +287,15 @@ export default function ResultsPage() {
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
+        )}
         <button
           onClick={handleBackToSearch}
           style={{
-            padding: "8px 16px",
+            padding: isMobile ? "6px 10px" : "8px 16px",
             border: "1px solid var(--border)",
             borderRadius: 6,
             background: "var(--bg)",
-            fontSize: 13,
+            fontSize: isMobile ? 12 : 13,
             color: "var(--text)",
             whiteSpace: "nowrap",
           }}
@@ -303,10 +307,11 @@ export default function ResultsPage() {
       <div
         style={{
           display: "flex",
-          gap: 4,
-          padding: "0 24px",
+          gap: isMobile ? 2 : 4,
+          padding: isMobile ? "0 12px" : "0 24px",
           borderBottom: "1px solid var(--border)",
           background: "var(--bg-secondary)",
+          overflowX: "auto",
         }}
       >
         {tabs.map((tab) => {
@@ -319,13 +324,14 @@ export default function ResultsPage() {
                 setVisibleCount(PAGE_SIZE);
               }}
               style={{
-                padding: "12px 16px",
+                padding: isMobile ? "10px 12px" : "12px 16px",
                 border: "none",
                 borderBottom: activeTab === tab.id ? "3px solid var(--primary)" : "3px solid transparent",
                 background: "transparent",
                 color: activeTab === tab.id ? "var(--primary)" : "var(--text-secondary)",
-                fontSize: 14,
+                fontSize: isMobile ? 13 : 14,
                 fontWeight: 500,
+                whiteSpace: "nowrap",
               }}
             >
               {tab.label}{" "}
@@ -355,8 +361,9 @@ export default function ResultsPage() {
           style={{
             flex: 1,
             overflowY: "auto",
-            padding: 16,
-            borderRight: selectedItem ? "1px solid var(--border)" : "none",
+            padding: isMobile ? 10 : 16,
+            borderRight: !isMobile && selectedItem ? "1px solid var(--border)" : "none",
+            display: isMobile && selectedItem ? "none" : "block",
           }}
         >
           {activeServiceResult && activeServiceResult.status === "error" ? (
@@ -545,7 +552,7 @@ export default function ResultsPage() {
         </div>
 
         {selectedItem && (
-          <div style={{ width: 380, overflowY: "auto", padding: 24, background: "var(--bg-secondary)" }}>
+          <div style={{ width: isMobile ? "100%" : 380, overflowY: "auto", padding: isMobile ? 16 : 24, background: "var(--bg-secondary)", display: isMobile && !selectedItem ? "none" : "block" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <span
                 style={{
