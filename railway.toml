@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm ci --prefix apps/web && npm ci --prefix apps/api && npm run build"
+buildCommand = "npm ci --include=dev --prefix apps/web && npm ci --include=dev --prefix apps/api && npm run build"
 
 [deploy]
 startCommand = "npm start"

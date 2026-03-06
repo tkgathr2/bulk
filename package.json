@@ -2,6 +2,9 @@
   "name": "bulk-search",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "screenshots": "node scripts/screenshot.mjs",
     "build": "npm run build:web && npm run build:api",
