@@ -41,7 +41,7 @@ app.use(
   session({
     store: new FileStore({
       path: SESSION_DIR,
-      ttl: 30 * 24 * 60 * 60,
+      ttl: 90 * 24 * 60 * 60,
       retries: 1,
       logFn: () => {},
     }),
@@ -51,7 +51,7 @@ app.use(
     cookie: {
       secure: IS_PROD,
       httpOnly: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000,
+      maxAge: 90 * 24 * 60 * 60 * 1000,
       sameSite: "lax",
     },
   })
